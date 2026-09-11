@@ -1,0 +1,132 @@
+/* Shared working surface: classroom first, inquiry alongside it. */
+.iq-platform-shell { width: min(1560px, 100%); padding-inline: clamp(16px, 3vw, 40px); }
+.iq-platform-shell [hidden] { display: none !important; }
+.iq-platform-shell a { text-decoration: none; }
+.iq-platform-shell a:focus-visible { outline: 3px solid #338667; outline-offset: 4px; }
+.iq-platform-shell .iq-header { min-height: 86px; gap: 20px; grid-template-columns: minmax(225px, 1fr) auto minmax(190px, 1fr); }
+.iq-platform-shell .iq-brand strong { font-size: 1.125rem; line-height: 1.35; }
+.iq-platform-shell .iq-brand small { font-size: .75rem; font-weight: 500; letter-spacing: .04em; }
+.iq-platform-shell .iq-view-switch { background: #e6eae4; }
+.iq-platform-shell .iq-view-switch a {
+  min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 18px; border-radius: 9px; font-size: .9375rem; font-weight: 700; color: #53665b;
+}
+.iq-platform-shell .iq-view-switch a:hover { color: #123e2f; background: #f3f5ef; }
+.iq-platform-shell .iq-view-switch a[aria-current] { color: #fff; background: var(--iq-green); box-shadow: 0 2px 8px #193d321c; }
+.iq-platform-shell .iq-local-state { font-size: .75rem; white-space: normal; line-height: 1.5; }
+.iq-platform-shell .iq-footer { font-size: .75rem; line-height: 1.65; margin-top: 28px; gap: 14px; }
+.iq-skip-link { position: absolute; left: 18px; top: -100px; padding: 12px 18px; background: #fff; color: #123e2f; z-index: 100; }
+.iq-skip-link:focus { top: 12px; }
+#platform-content:focus { outline: none; }
+.classroom-subnav { display: flex; flex-wrap: wrap; gap: 4px 20px; padding: 14px 0; border-bottom: 1px solid var(--iq-line); }
+.classroom-subnav a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 7px 12px; border-radius: 7px; color: #637069; font-size: .875rem; font-weight: 650; }
+.classroom-subnav a:hover { background: #e8ece5; color: #224b39; }
+.classroom-subnav a[aria-current] { background: #dfebe2; color: #20543f; }
+.classroom-subnav svg { width: 17px; height: 17px; flex-shrink: 0; }
+.classroom-heading { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 18px 32px; padding: 32px 0 24px; }
+.classroom-heading h1 { font-size: clamp(1.7rem, 3vw, 2.4rem); line-height: 1.35; letter-spacing: -.04em; margin: 0 0 8px; }
+.classroom-heading .iq-kicker { margin-bottom: 7px; }
+.classroom-heading p:not(.iq-kicker), .classroom-lab-heading p { margin: 0; color: var(--iq-muted); font-size: 1rem; line-height: 1.7; }
+.classroom-mode-note { display: inline-flex; gap: 7px; align-items: center; color: #5d7467; font-size: .8125rem; padding-bottom: 5px; }
+.classroom-mode-note svg { width: 16px; height: 16px; }
+.classroom-module-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--iq-layout-gap); }
+.classroom-module { --module-accent: #245d46; --module-light: #e3efe7; display: flex; flex-direction: column; padding: clamp(20px, 2.2vw, 30px); border: 1px solid #d2dcd2; border-top: 4px solid var(--module-accent); border-radius: 14px; background: var(--iq-paper); color: var(--iq-ink); transition: border-color .15s, box-shadow .15s; }
+.classroom-module-optics { --module-accent: #27647e; --module-light: #e3eff3; }
+.classroom-module-electricity { --module-accent: #956520; --module-light: #f6edda; }
+.classroom-module-mechanics { --module-accent: #426d88; --module-light: #e8f1f5; }
+.classroom-module:hover { border-color: var(--module-accent); box-shadow: 0 8px 25px #1c392c0f; }
+.classroom-module-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.classroom-module-top > span:last-child { color: #6f7971; font-size: .75rem; }
+.classroom-module-icon { width: 48px; height: 48px; display: grid; place-items: center; background: var(--module-light); color: var(--module-accent); border-radius: 12px; }
+.classroom-module-icon svg { width: 26px; height: 26px; }
+.classroom-module h2 { margin: 20px 0 8px; font-size: 1.5rem; line-height: 1.4; }
+.classroom-module p { margin: 0; color: #617067; font-size: 1rem; line-height: 1.75; }
+.classroom-module ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; list-style: none; padding: 0; margin: 22px 0 26px; }
+.classroom-module li { display: flex; align-items: center; gap: 7px; font-size: .875rem; color: #455c4d; line-height: 1.5; }
+.classroom-module li::before { content: ''; width: 4px; height: 4px; flex-shrink: 0; border-radius: 50%; background: var(--module-accent); }
+.classroom-module-enter { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid #e2e7dd; color: var(--module-accent); font-size: .9375rem; font-weight: 750; }
+.classroom-module-enter svg { width: 20px; height: 20px; }
+.classroom-inquiry-section { padding-top: var(--iq-section-space); }
+.classroom-section-heading { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.classroom-section-heading > div { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.classroom-section-heading h2 { margin: 0; font-size: 1.25rem; line-height: 1.5; }
+.classroom-section-heading > p { margin: 0; font-size: .875rem; color: var(--iq-muted); }
+.classroom-new-label { display: inline-block; padding: 3px 7px; border-radius: 5px; background: #1d4938; color: #fff; font-size: .75rem; }
+.classroom-inquiry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--iq-layout-gap); }
+.classroom-inquiry-link { display: grid; grid-template-columns: 42px minmax(0, 1fr) 20px; align-items: start; gap: 16px; padding: 24px; border: 1px solid var(--iq-line); border-radius: 12px; background: #f8f9f3; color: var(--iq-ink); }
+.classroom-inquiry-link:hover { border-color: #6a9580; background: #fffefa; }
+.classroom-entry-icon { display: grid; place-items: center; width: 42px; height: 42px; background: #e5ebe0; color: #436b50; border-radius: 9px; }
+.classroom-entry-icon svg { width: 22px; height: 22px; }
+.classroom-inquiry-link > svg { width: 19px; height: 19px; margin-top: 10px; color: #557565; }
+.classroom-inquiry-link h3 { margin: 0 0 7px; font-size: 1.125rem; line-height: 1.5; }
+.classroom-inquiry-link h3 span { font-weight: 500; color: #768479; font-size: .8125rem; padding-left: 6px; }
+.classroom-inquiry-link p { margin: 0 0 12px; color: #5e6d63; font-size: 1rem; line-height: 1.65; }
+.classroom-inquiry-link small { color: #6c7a70; font-size: .8125rem; line-height: 1.7; }
+.classroom-scope-link { display: flex; align-items: center; gap: 12px; padding: 17px 20px; margin-top: 14px; color: #456251; background: #e9efe5; border-radius: 10px; font-size: .875rem; line-height: 1.7; }
+.classroom-scope-link:hover { background: #e1ebdc; }
+.classroom-scope-link > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.classroom-scope-link > svg:last-child { margin-left: auto; }
+.classroom-scope-link strong { color: #294f3b; margin-right: 12px; }
+.classroom-planned { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 26px; color: #768077; font-size: .875rem; }
+.classroom-planned > span:first-child { color: #4e6254; }
+.classroom-planned small { margin-left: 5px; font-size: .75rem; }
+.classroom-lab-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; padding: 24px 0 14px; }
+.classroom-lab-heading h1 { margin: 0 0 4px; font-size: 1.625rem; line-height: 1.4; }
+.classroom-lab-heading .iq-button { font-size: .875rem; }
+.classroom-record-note { margin: 0 0 18px; padding-left: 10px; border-left: 2px solid #bacbba; color: #647268; font-size: .8125rem; line-height: 1.65; }
+.classroom-frame { display: block; width: 100%; border: 0; background: transparent; }
+.classroom-load-state { margin: 0 0 16px; padding: 18px; border: 1px solid #d5ddcd; border-radius: 10px; color: #45614e; font-size: 1rem; }
+.classroom-load-state a { text-decoration: underline; }
+
+/* Compact the new workflows too; the task controls belong near the top. */
+.iq-platform-shell .iq-start-layout { min-height: auto; padding: 34px 0; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-content: start; gap: 28px 40px; }
+.iq-platform-shell .iq-start-copy { align-self: start; padding-top: 22px; }
+.iq-platform-shell .iq-start-copy h1 { font-size: clamp(1.75rem, 3.1vw, 2.625rem); line-height: 1.35; margin-bottom: 18px; }
+.iq-platform-shell .iq-start-copy > p:not(.iq-kicker) { font-size: 1rem; }
+.iq-platform-shell .iq-principles { display: grid; gap: 12px; justify-content: start; }
+.iq-platform-shell .iq-principles span { border: 0; background: transparent; padding: 0; font-size: .875rem; min-height: 24px; }
+.iq-platform-shell .iq-teacher-intro { padding-top: 30px; }
+.iq-platform-shell .iq-teacher-intro h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1.3; margin-bottom: 10px; }
+.iq-platform-shell .iq-teacher-intro > div > p:last-child { font-size: 1rem; }
+.iq-platform-shell .iq-button { min-height: 42px; font-size: .875rem; }
+.iq-platform-shell .iq-sound-legacy { margin-inline: 0; }
+.iq-platform-shell .iq-sound-legacy .sound-scope { width: 100%; padding-inline: 0; padding-top: 0; }
+.iq-platform-shell .iq-sound-legacy .ss-intro { display: none; }
+
+@media (max-width: 1180px) {
+  .iq-platform-shell .iq-header { grid-template-columns: 1fr auto; }
+  .classroom-module { padding: 22px; }
+  .classroom-module ul { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .iq-platform-shell .iq-header { grid-template-columns: 1fr; padding-block: 14px; gap: 12px; }
+  .iq-platform-shell .iq-brand { justify-self: start; }
+  .iq-platform-shell .iq-view-switch { justify-self: stretch; width: 100%; }
+  .iq-platform-shell .iq-view-switch a { flex: 1; }
+  .classroom-subnav { gap: 4px 8px; }
+  .classroom-module-grid { grid-template-columns: 1fr; gap: 16px; }
+  .classroom-module ul { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 16px 0; }
+  .classroom-module h2 { margin-top: 12px; }
+  .classroom-inquiry-grid { grid-template-columns: 1fr; gap: 14px; }
+  .iq-platform-shell .iq-start-layout { grid-template-columns: 1fr; gap: 24px; }
+  .iq-platform-shell .iq-start-copy { padding-top: 0; max-width: none; text-align: left; margin: 0; }
+  .iq-platform-shell .iq-start-copy > p { margin-left: 0; }
+  .iq-platform-shell .iq-principles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .iq-platform-shell .iq-start-card, .iq-platform-shell .iq-recent-card { width: 100%; }
+}
+@media (max-width: 620px) {
+  .iq-platform-shell .iq-view-switch { gap: 2px; }
+  .iq-platform-shell .iq-view-switch a { padding: 10px 8px; font-size: .875rem; gap: 5px; }
+  .iq-platform-shell .iq-view-switch svg { display: none; }
+  .classroom-heading { padding-top: 24px; }
+  .classroom-subnav { display: grid; grid-template-columns: 1fr 1fr; }
+  .classroom-subnav a { justify-content: start; }
+  .classroom-inquiry-link { padding: 20px 16px; gap: 12px; grid-template-columns: 34px minmax(0, 1fr); }
+  .classroom-entry-icon { width: 34px; height: 38px; }
+  .classroom-inquiry-link > svg { display: none; }
+  .classroom-inquiry-link h3 span { display: block; padding: 0; }
+  .classroom-scope-link { padding: 15px; align-items: flex-start; }
+  .classroom-scope-link strong { display: block; }
+  .iq-platform-shell .iq-principles { grid-template-columns: 1fr; }
+  .iq-platform-shell .iq-start-layout { padding-block: 24px; }
+}

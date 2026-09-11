@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>格物 · 电学仿真实验室</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="electricity/lab.css">
+  <link rel="stylesheet" href="electricity/circuit-builder.css">
+  <link rel="stylesheet" href="classroom.css">
+  <script id="classroom-bridge" data-module="electricity" src="classroom-bridge.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header><a class="brand" href="物理教学仿真实验平台.html"><span class="brand-mark">ϟ</span><strong>格物 · 电学实验室</strong></a><span class="local">课堂实验 · 数据保留在本页</span></header>
+    <section class="intro"><div><h1>连接、观察、测量</h1><p>用装置中的变化和亲手记录的数据，验证你的判断。</p></div><span id="formula" class="formula-chip">自主接线 · 实时测量</span></section>
+    <nav class="tabs" aria-label="选择电学实验">
+      <button id="builderTab" class="builder-tab" type="button"><span class="tab-icon">⌘</span><span><strong>自由搭建</strong><small>元件与接线</small></span></button>
+      <button class="tab" data-mode="ohm" type="button"><span class="tab-icon">Ω</span><span><strong>欧姆定律</strong><small>控制变量与描点</small></span></button>
+      <button class="tab" data-mode="network" type="button"><span class="tab-icon">⌁</span><span><strong>串并联电路</strong><small>干路与支路</small></span></button>
+      <button class="tab" data-mode="iv" type="button"><span class="tab-icon">⌇</span><span><strong>伏安特性</strong><small>测量与曲线</small></span></button>
+      <button class="tab" data-mode="induction" type="button"><span class="tab-icon">∿</span><span><strong>电磁感应</strong><small>移动磁铁与观察偏转</small></span></button>
+    </nav>
+    <section id="circuitBuilder" aria-label="自由电路实验台"></section>
+    <section id="fixedElectricLab" class="teaching-lab" aria-label="电学专题实验" hidden></section>
+    <footer>先预测，再改变一个条件，最后比较测量结果。实验记录在刷新后清除，可导出保存。</footer>
+  </main>
+  <script src="electricity/circuit-physics.js"></script>
+  <script src="electricity/lab-models.js"></script>
+  <script src="electricity/lab-visuals.js"></script>
+  <script src="electricity/wire-router.js"></script>
+  <script src="electricity/circuit-builder.js"></script>
+  <script src="electricity/teaching-labs.js"></script>
+</body>
+</html>

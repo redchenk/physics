@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>格物 · 光学仿真实验室</title>
+  <style>
+    :root {
+      --paper:#f3f1eb;--card:#fffef9;--ink:#172421;--muted:#68736e;--line:#d7d8d0;
+      --navy:#132b3a;--teal:#2b7567;--cyan:#68d9e8;--yellow:#ffd166;--coral:#ef8e72;
+      font-family:Inter,"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--paper)}
+    button,input,select{font:inherit}button{cursor:pointer}.app{width:min(1440px,100%);min-height:100vh;margin:auto;padding:0 36px 28px}
+    header{height:70px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}.brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;color:var(--yellow);background:var(--navy);font:700 20px Georgia,serif}.brand-name{display:grid;gap:1px}.brand-name strong{font-size:18px;letter-spacing:.06em;line-height:1}.brand-name small{color:#7a847e;font-size:8px;font-weight:750;letter-spacing:.18em}
+    .local{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}.local i{width:8px;height:8px;border-radius:50%;background:#4bb68b;box-shadow:0 0 0 4px rgba(75,182,139,.12)}
+    .intro{display:flex;align-items:end;justify-content:space-between;gap:28px;padding:31px 0 22px}.eyebrow{margin:0 0 6px;color:#33786a;font-size:11px;font-weight:760;letter-spacing:.13em}.intro h1{margin:0 0 7px;font-size:clamp(31px,3.6vw,48px);line-height:1.05;letter-spacing:-.05em}.intro-copy{max-width:680px;margin:0;color:#65716b;font-size:14px;line-height:1.65}.formula-chip{flex-shrink:0;padding:12px 15px;border:1px solid #cbd2cb;border-radius:10px;color:#43564f;background:#f9f9f4;font:12px Consolas,monospace}
+    .experiment-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}.tab{min-height:54px;display:flex;align-items:center;gap:10px;padding:0 16px;border:1px solid var(--line);border-radius:12px;color:#53615a;background:#faf9f4;text-align:left}.tab:hover{border-color:#aab9b1}.tab.active{border-color:#254f46;color:#f7fff9;background:#173e35;box-shadow:0 7px 20px rgba(23,62,53,.14)}.tab-icon{width:29px;height:29px;display:grid;place-items:center;border-radius:8px;background:rgba(76,132,117,.12);font-size:15px}.tab.active .tab-icon{color:var(--yellow);background:rgba(255,255,255,.1)}.tab span:last-child{display:grid;gap:1px}.tab strong{font-size:13px}.tab small{font-size:9px;opacity:.7}
+    .lab-grid{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px}.card{border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 8px 25px rgba(22,35,31,.045)}
+    .controls{grid-row:span 2;padding:20px}.panel-kicker{margin:0 0 3px;color:#4e7a6e;font-size:9px;font-weight:760;letter-spacing:.12em}.controls h2,.stage-head h2,.inquiry h2{margin:0;font-size:17px;letter-spacing:-.025em}.control-set{display:none;margin-top:20px}.control-set.active{display:grid;gap:18px}.field{display:grid;gap:7px}.field-line{display:flex;align-items:center;justify-content:space-between;gap:12px}.field label{color:#52615a;font-size:11px;font-weight:680}.field output{color:#1e5c4d;font:700 12px Consolas,monospace}.field input[type=range]{width:100%;accent-color:#337e6c}.field select{width:100%;height:38px;padding:0 10px;border:1px solid #ccd0c9;border-radius:9px;color:#2f4039;background:#fff}.choice{display:grid;grid-template-columns:1fr 1fr;gap:6px}.choice button{height:37px;border:1px solid #ccd0c9;border-radius:9px;color:#55635c;background:#fafaf6;font-size:11px}.choice button.active{border-color:#337e6c;color:#245e50;background:#e8f4ef;font-weight:700}
+    .hint-box{margin-top:21px;padding:13px 14px;border-left:3px solid var(--yellow);border-radius:3px 9px 9px 3px;background:#f8f0de}.hint-box strong{color:#775d20;font-size:10px}.hint-box p{margin:4px 0 0;color:#725f38;font-size:10px;line-height:1.55}
+    .stage{min-width:0;overflow:hidden}.stage-head{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px;border-bottom:1px solid var(--line)}.stage-help{color:#748079;font-size:10px}.stage-help b{color:#397865}.canvas-wrap{position:relative;height:440px;background:#101b2a;touch-action:none}.canvas-wrap canvas{display:block;width:100%;height:100%;cursor:crosshair}.canvas-badge{position:absolute;left:13px;top:12px;padding:6px 8px;border:1px solid rgba(183,217,225,.2);border-radius:7px;color:rgba(220,239,242,.72);background:rgba(10,21,35,.75);font:9px Consolas,monospace;pointer-events:none}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #263747;background:#142435}.metric{min-width:0;padding:14px 15px}.metric+.metric{border-left:1px solid #2c3d4c}.metric span{display:block;margin-bottom:5px;color:#8199a3;font-size:9px}.metric strong{display:block;overflow:hidden;color:#f0f7f5;font:700 18px Consolas,"Microsoft YaHei",monospace;text-overflow:ellipsis;white-space:nowrap}.metric small{display:block;margin-top:3px;color:#8fa5ad;font-size:8px}
+    .inquiry{grid-column:2;padding:19px}.inquiry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.task{max-width:720px}.task p{margin:6px 0 0;color:#6d7872;font-size:11px;line-height:1.6}.record-actions{display:flex;gap:7px}.button{min-height:36px;padding:0 13px;border:1px solid transparent;border-radius:9px;font-size:11px;font-weight:680}.button-primary{color:#f5fff9;background:#1f5d4f}.button-primary:hover{background:#2b7563}.button-outline{border-color:#cfd2cb;color:#5d6862;background:#fff}.record-note{min-height:18px;margin:8px 0 0;color:#397765;font-size:10px}
+    .conclusion{margin:14px 0;padding:12px 14px;border:1px solid #d8ddd7;border-radius:10px;color:#3f514a;background:#f5f7f2;font-size:11px;line-height:1.65}.conclusion strong{color:#215d4e}
+    .table-wrap{overflow:auto;border:1px solid #d9dbd4;border-radius:10px}table{width:100%;border-collapse:collapse;font-size:10px}th,td{padding:9px 10px;border-bottom:1px solid #e1e2dc;text-align:left;white-space:nowrap}th{color:#6b7770;background:#f5f5f0;font-weight:700}td{color:#405149}tbody tr:last-child td{border-bottom:0}.empty-row td{padding:18px;color:#8a928d;text-align:center}
+    footer{display:flex;justify-content:space-between;gap:20px;padding:17px 2px 0;color:#748078;font-size:9px;line-height:1.6}footer p{margin:0}
+    @media(max-width:980px){.app{padding-inline:22px}.lab-grid{grid-template-columns:1fr}.controls{grid-row:auto}.control-set.active{grid-template-columns:repeat(2,1fr)}.hint-box{grid-column:1/-1;margin-top:0}.inquiry{grid-column:1}.canvas-wrap{height:400px}}
+    @media(max-width:650px){.app{padding-inline:13px}header{height:62px}.local span{display:none}.intro{align-items:flex-start;flex-direction:column;padding-top:24px}.formula-chip{display:none}.experiment-tabs{grid-template-columns:1fr}.tab{min-height:48px}.control-set.active{grid-template-columns:1fr}.hint-box{grid-column:auto}.stage-head{align-items:flex-start;flex-direction:column;gap:5px}.canvas-wrap{height:350px}.metrics{grid-template-columns:1fr 1fr}.metric:nth-child(3){border-left:0;border-top:1px solid #2c3d4c}.metric:nth-child(4){border-top:1px solid #2c3d4c}.inquiry-top{flex-direction:column}.record-actions{width:100%}.record-actions .button{flex:1}footer{flex-direction:column}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+  <link rel="stylesheet" href="optics/bench.css?v=20260906-optics1">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <a class="brand" href="物理教学仿真实验平台.html" aria-label="返回物理教学仿真实验平台"><span class="brand-mark">Φ</span><span class="brand-name"><strong>格物 · 光学</strong><small>PHYSICS INQUIRY LAB</small></span></a>
+      <div class="local"><i></i><span>本地运行 · 实验数据不会上传</span></div>
+    </header>
+
+    <section class="intro">
+      <div><p class="eyebrow">物理教学仿真实验平台 · 光学模块</p><h1>追踪每一束光</h1><p class="intro-copy">自由组合光源、镜面、透镜、棱镜与光屏，探索平面镜成像、白光色散、反射和折射，让光路随你的装置改变。</p></div>
+      <div id="formulaChip" class="formula-chip">∠i = ∠r</div>
+    </section>
+
+    <nav class="experiment-tabs" aria-label="选择光学实验">
+      <button class="tab" data-mode="bench" type="button"><span class="tab-icon">✦</span><span><strong>自由探索</strong><small>组合器材，搭建自己的光路</small></span></button>
+      <button class="tab" data-mode="mirror-image" type="button"><span class="tab-icon">↔</span><span><strong>平面镜成像</strong><small>拖动物体，寻找对称虚像</small></span></button>
+      <button class="tab" data-mode="dispersion" type="button"><span class="tab-icon">△</span><span><strong>色散现象</strong><small>白光过棱镜，观察光谱</small></span></button>
+      <button class="tab active" data-mode="reflection" type="button"><span class="tab-icon">↗</span><span><strong>光的反射</strong><small>验证反射定律</small></span></button>
+      <button class="tab" data-mode="refraction" type="button"><span class="tab-icon">↘</span><span><strong>光的折射</strong><small>观察折射与全反射</small></span></button>
+      <button class="tab" data-mode="lens" type="button"><span class="tab-icon">◉</span><span><strong>透镜成像</strong><small>探究像的位置与性质</small></span></button>
+    </nav>
+
+    <section class="lab-grid">
+      <aside class="card controls">
+        <p class="panel-kicker">实验控制台</p><h2 id="controlTitle">反射条件</h2>
+
+        <div class="control-set active" data-controls="reflection">
+          <div class="field"><div class="field-line"><label for="reflectionAngle">入射角</label><output id="reflectionAngleOut">35°</output></div><input id="reflectionAngle" type="range" min="0" max="80" step="1" value="35"></div>
+          <div class="hint-box"><strong>探究提示</strong><p>拖动入射光源或改变角度，记录三组数据，比较入射角和反射角。</p></div>
+        </div>
+
+        <div class="control-set" data-controls="refraction">
+          <div class="field"><label for="medium1">入射介质</label><select id="medium1"><option value="1">空气 n=1.00</option><option value="1.33">水 n=1.33</option><option value="1.49">亚克力 n=1.49</option><option value="1.5">玻璃 n=1.50</option><option value="2.42">钻石 n=2.42</option></select></div>
+          <div class="field"><label for="medium2">折射介质</label><select id="medium2"><option value="1">空气 n=1.00</option><option value="1.33">水 n=1.33</option><option value="1.49">亚克力 n=1.49</option><option value="1.5" selected>玻璃 n=1.50</option><option value="2.42">钻石 n=2.42</option></select></div>
+          <div class="field"><div class="field-line"><label for="refractionAngle">入射角</label><output id="refractionAngleOut">45°</output></div><input id="refractionAngle" type="range" min="0" max="85" step="1" value="45"></div>
+          <div class="hint-box"><strong>探究提示</strong><p>先比较空气进入玻璃，再交换两种介质并逐渐增大入射角，寻找全反射条件。</p></div>
+        </div>
+
+        <div class="control-set" data-controls="lens">
+          <div class="field"><label>透镜类型</label><div class="choice"><button class="active" data-lens="convex" type="button">凸透镜</button><button data-lens="concave" type="button">凹透镜</button></div></div>
+          <div class="field"><div class="field-line"><label for="focalLength">焦距大小</label><output id="focalLengthOut">12 cm</output></div><input id="focalLength" type="range" min="6" max="20" step="1" value="12"></div>
+          <div class="field"><div class="field-line"><label for="objectDistance">物距 u</label><output id="objectDistanceOut">30 cm</output></div><input id="objectDistance" type="range" min="7" max="50" step="1" value="30"></div>
+          <div class="hint-box"><strong>探究提示</strong><p>拖动物体依次经过 2f、f 等位置，记录像距、放大率以及像的正倒和虚实。</p></div>
+        </div>
+      </aside>
+
+      <article class="card stage">
+        <div class="stage-head"><div><p class="panel-kicker">动态光路</p><h2 id="stageTitle">平面镜反射实验</h2></div><div class="stage-help"><b>可直接拖动</b> 光源或物体改变参数</div></div>
+        <div class="canvas-wrap"><canvas id="opticsCanvas" aria-label="交互式光学实验光路图"></canvas><span id="canvasBadge" class="canvas-badge">拖动光源改变入射角</span></div>
+        <div class="metrics">
+          <div class="metric"><span id="metricLabel1">入射角 i</span><strong id="metricValue1">35°</strong><small id="metricNote1">相对法线测量</small></div>
+          <div class="metric"><span id="metricLabel2">反射角 r</span><strong id="metricValue2">35°</strong><small id="metricNote2">相对法线测量</small></div>
+          <div class="metric"><span id="metricLabel3">角度差</span><strong id="metricValue3">0°</strong><small id="metricNote3">实验误差</small></div>
+          <div class="metric"><span id="metricLabel4">当前规律</span><strong id="metricValue4">i = r</strong><small id="metricNote4">反射定律</small></div>
+        </div>
+      </article>
+
+      <article class="card inquiry">
+        <div class="inquiry-top">
+          <div class="task"><p class="panel-kicker">实验探究记录</p><h2 id="taskTitle">入射角改变时，反射角怎样变化？</h2><p id="taskDescription">改变入射角并记录数据，观察两列角度是否始终相等。</p></div>
+          <div class="record-actions"><button id="recordData" class="button button-primary" type="button">＋ 记录本次数据</button><button id="clearData" class="button button-outline" type="button">清空</button></div>
+        </div>
+        <p id="recordNote" class="record-note" aria-live="polite"></p>
+        <div id="conclusion" class="conclusion"><strong>动态结论：</strong>反射光线与入射光线分居法线两侧，当前入射角和反射角均为 35°。</div>
+        <div class="table-wrap"><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+      </article>
+    </section>
+
+    <section id="opticsBench" hidden aria-label="可自由组合的光学实验台"></section>
+    <footer><p>采用几何光学与薄透镜近轴模型；可在自由探索台查看操作说明和模型范围。</p><p>实验数据留在本机；刷新前可导出装置与探索记录。</p></footer>
+  </main>
+
+  <script>
+    (()=>{
+      "use strict";
+      const $=id=>document.getElementById(id);
+      const canvas=$("opticsCanvas");
+      const ctx=canvas.getContext("2d");
+      const mediaNames={"1":"空气","1.33":"水","1.49":"亚克力","1.5":"玻璃","2.42":"钻石"};
+      const state={mode:"reflection",reflectionAngle:35,refractionAngle:45,n1:1,n2:1.5,lensType:"convex",focalLength:12,objectDistance:30};
+      const records={reflection:[],refraction:[],lens:[]};
+      let dragging=false;
+      let geometry=null;
+
+      function fit(){
+        const rect=canvas.getBoundingClientRect();
+        const dpr=Math.min(window.devicePixelRatio||1,2);
+        const width=Math.max(1,Math.floor(rect.width*dpr)),height=Math.max(1,Math.floor(rect.height*dpr));
+        if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height}
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        return{w:rect.width,h:rect.height,dpr};
+      }
+
+      function background(w,h){
+        ctx.fillStyle="#101b2a";ctx.fillRect(0,0,w,h);
+        ctx.strokeStyle="rgba(137,166,183,.09)";ctx.lineWidth=1;
+        for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+        for(let y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+      }
+
+      function line(x1,y1,x2,y2,color,width=2,dashed=false){
+        ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dashed?[6,6]:[]);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
+      }
+
+      function arrow(x1,y1,x2,y2,color,width=2){
+        line(x1,y1,x2,y2,color,width);
+        const angle=Math.atan2(y2-y1,x2-x1),size=8;
+        ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-Math.cos(angle-.5)*size,y2-Math.sin(angle-.5)*size);ctx.lineTo(x2-Math.cos(angle+.5)*size,y2-Math.sin(angle+.5)*size);ctx.closePath();ctx.fill();
+      }
+
+      function label(text,x,y,color="#b8c8cf",align="center"){
+        ctx.fillStyle=color;ctx.font='11px "Microsoft YaHei",sans-serif';ctx.textAlign=align;ctx.fillText(text,x,y);
+      }
+
+      function angleArc(cx,cy,r,start,end,text,color){
+        ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,r,start,end);ctx.stroke();
+        const mid=(start+end)/2;label(text,cx+Math.cos(mid)*(r+13),cy+Math.sin(mid)*(r+13),color);
+      }
+
+      function setMetric(index,labelText,value,note){
+        $("metricLabel"+index).textContent=labelText;$("metricValue"+index).textContent=value;$("metricNote"+index).textContent=note;
+      }
+
+      function drawReflection(w,h){
+        background(w,h);
+        const cx=w*.56,cy=h*.64,len=Math.min(w*.42,h*.52),a=state.reflectionAngle*Math.PI/180;
+        geometry={cx,cy,type:"angle"};
+        line(45,cy,w-45,cy,"#9fb6c0",4);line(cx,cy-h*.5,cx,cy+45,"rgba(194,216,224,.48)",1,true);
+        for(let x=55;x<w-45;x+=22)line(x,cy+3,x-9,cy+12,"rgba(159,182,192,.35)",1);
+        const sx=cx-Math.sin(a)*len,sy=cy-Math.cos(a)*len,ex=cx+Math.sin(a)*len,ey=cy-Math.cos(a)*len;
+        arrow(sx,sy,cx,cy,"#ffd166",3);arrow(cx,cy,ex,ey,"#68d9e8",3);
+        ctx.fillStyle="#ffd166";ctx.beginPath();ctx.arc(sx,sy,7,0,Math.PI*2);ctx.fill();label("光源",sx-12,sy-13,"#f7dc91");
+        angleArc(cx,cy,42,-Math.PI/2-a,-Math.PI/2,"i="+state.reflectionAngle+"°","#ffd166");
+        angleArc(cx,cy,42,-Math.PI/2,-Math.PI/2+a,"r="+state.reflectionAngle+"°","#68d9e8");
+        label("法线",cx+8,cy-h*.44,"#8ba0aa","left");label("平面镜",w-55,cy+27,"#a7bac2","right");
+        setMetric(1,"入射角 i",state.reflectionAngle+"°","相对法线测量");setMetric(2,"反射角 r",state.reflectionAngle+"°","相对法线测量");setMetric(3,"角度差","0°","理想模型");setMetric(4,"当前规律","i = r","反射定律");
+        $("conclusion").innerHTML="<strong>动态结论：</strong>反射光线与入射光线分居法线两侧，当前入射角和反射角均为 "+state.reflectionAngle+"°。";
+      }
+
+      function refractionResult(){
+        const sinR=state.n1/state.n2*Math.sin(state.refractionAngle*Math.PI/180);
+        if(sinR>1)return{tir:true,critical:Math.asin(state.n2/state.n1)*180/Math.PI};
+        return{tir:false,angle:Math.asin(Math.min(1,sinR))*180/Math.PI,critical:state.n1>state.n2?Math.asin(state.n2/state.n1)*180/Math.PI:null};
+      }
+
+      function drawRefraction(w,h){
+        background(w,h);
+        const cx=w*.53,cy=h*.51,len=Math.min(w*.4,h*.42),a=state.refractionAngle*Math.PI/180,result=refractionResult();
+        geometry={cx,cy,type:"angle"};
+        ctx.fillStyle="rgba(71,114,140,.13)";ctx.fillRect(0,0,w,cy);ctx.fillStyle="rgba(39,120,111,.12)";ctx.fillRect(0,cy,w,h-cy);
+        line(30,cy,w-30,cy,"#a6bbc3",2);line(cx,25,cx,h-25,"rgba(194,216,224,.42)",1,true);
+        const sx=cx-Math.sin(a)*len,sy=cy-Math.cos(a)*len;arrow(sx,sy,cx,cy,"#ffd166",3);ctx.fillStyle="#ffd166";ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.fill();
+        angleArc(cx,cy,39,-Math.PI/2-a,-Math.PI/2,"i="+state.refractionAngle+"°","#ffd166");
+        if(result.tir){
+          const ex=cx+Math.sin(a)*len,ey=cy-Math.cos(a)*len;arrow(cx,cy,ex,ey,"#ef8e72",3);angleArc(cx,cy,39,-Math.PI/2,-Math.PI/2+a,"全反射","#ef8e72");label("没有折射光线",cx+18,cy+58,"#efab98","left");
+          setMetric(1,"入射角 i",state.refractionAngle+"°","相对法线");setMetric(2,"临界角 C",result.critical.toFixed(1)+"°","i ＞ C");setMetric(3,"折射状态","全反射","无折射光线");setMetric(4,"介质关系",state.n1.toFixed(2)+" → "+state.n2.toFixed(2),"由密到疏");
+          $("conclusion").innerHTML="<strong>动态结论：</strong>光从光密介质进入光疏介质，入射角 "+state.refractionAngle+"° 大于临界角 "+result.critical.toFixed(1)+"°，发生全反射。";
+        }else{
+          const r=result.angle*Math.PI/180,ex=cx+Math.sin(r)*len,ey=cy+Math.cos(r)*len;arrow(cx,cy,ex,ey,"#68d9e8",3);angleArc(cx,cy,42,Math.PI/2-r,Math.PI/2,"r="+result.angle.toFixed(1)+"°","#68d9e8");
+          const left=(state.n1*Math.sin(a)).toFixed(3),right=(state.n2*Math.sin(r)).toFixed(3);
+          setMetric(1,"入射角 i",state.refractionAngle+"°","相对法线");setMetric(2,"折射角 r",result.angle.toFixed(1)+"°","相对法线");setMetric(3,"n₁sin i / n₂sin r",left+" / "+right,"数值相等");setMetric(4,"偏折方向",result.angle<state.refractionAngle?"靠近法线":result.angle>state.refractionAngle?"远离法线":"不偏折","比较 i 与 r");
+          const direction=result.angle<state.refractionAngle?"向法线偏折":result.angle>state.refractionAngle?"远离法线偏折":"传播方向不变";
+          $("conclusion").innerHTML="<strong>动态结论：</strong>折射角为 "+result.angle.toFixed(1)+"°，光线"+direction+"；n₁sin i 与 n₂sin r 在理想模型中相等。";
+        }
+        label(mediaNames[String(state.n1)]+"  n₁="+state.n1.toFixed(2),18,28,"#9bb5c0","left");label(mediaNames[String(state.n2)]+"  n₂="+state.n2.toFixed(2),18,cy+28,"#8fc2b8","left");label("分界面",w-43,cy-9,"#a7bac2","right");
+      }
+
+      function lensResult(){
+        const f=state.lensType==="convex"?state.focalLength:-state.focalLength,u=state.objectDistance,denominator=1/f-1/u;
+        if(Math.abs(denominator)<.0001)return{f,u,v:Infinity,m:Infinity,nature:"像在无穷远"};
+        const v=1/denominator,m=-v/u;
+        const nature=(v>0?"实像":"虚像")+" · "+(m<0?"倒立":"正立")+" · "+(Math.abs(m)>1.05?"放大":Math.abs(m)<.95?"缩小":"等大");
+        return{f,u,v,m,nature};
+      }
+
+      function pointAtX(x1,y1,x2,y2,targetX){const t=(targetX-x1)/(x2-x1||.0001);return{x:targetX,y:y1+(y2-y1)*t}}
+
+      function drawArrowObject(x,axis,height,color,labelText,dashed=false){
+        const tipY=axis-height,baseY=tipY+(height>=0?12:-12);
+        line(x,axis,x,tipY,color,4,dashed);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(x,tipY);ctx.lineTo(x-7,baseY);ctx.lineTo(x+7,baseY);ctx.closePath();ctx.fill();label(labelText,x,axis+39,color);
+      }
+
+      function drawLens(w,h){
+        background(w,h);
+        const axis=h*.53,lensX=w*.57,scale=Math.min(8,(lensX-48)/50),absF=state.focalLength*scale,u=state.objectDistance*scale,result=lensResult();
+        const objectX=lensX-u,objectHeight=Math.min(82,h*.24),topY=axis-objectHeight;
+        geometry={lensX,axis,scale,type:"object"};
+        line(25,axis,w-25,axis,"rgba(179,204,214,.48)",1);
+        const lensTop=48,lensBottom=h-46;
+        ctx.save();ctx.fillStyle="rgba(104,217,232,.16)";ctx.strokeStyle="#73d6e4";ctx.lineWidth=2.5;ctx.beginPath();
+        if(state.lensType==="convex"){
+          ctx.moveTo(lensX,lensTop);ctx.bezierCurveTo(lensX-24,lensTop+72,lensX-24,lensBottom-72,lensX,lensBottom);ctx.bezierCurveTo(lensX+24,lensBottom-72,lensX+24,lensTop+72,lensX,lensTop);
+        }else{
+          ctx.moveTo(lensX-18,lensTop);ctx.bezierCurveTo(lensX-5,lensTop+72,lensX-5,lensBottom-72,lensX-18,lensBottom);ctx.lineTo(lensX+18,lensBottom);ctx.bezierCurveTo(lensX+5,lensBottom-72,lensX+5,lensTop+72,lensX+18,lensTop);ctx.closePath();
+        }
+        ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+        line(lensX,lensTop-9,lensX,lensBottom+9,"rgba(115,214,228,.45)",1,true);
+        label(state.lensType==="convex"?"凸透镜（中间厚 · 会聚）":"凹透镜（中间薄 · 发散）",lensX,27,"#9be3ec");
+        const axisMarks=[
+          {x:lensX-2*absF,text:"2F",color:"#efaa8f",radius:3},
+          {x:lensX-absF,text:"F",color:"#d8bd6d",radius:4},
+          {x:lensX+absF,text:"F′",color:"#d8bd6d",radius:4},
+          {x:lensX+2*absF,text:"2F′",color:"#efaa8f",radius:3}
+        ];
+        for(const mark of axisMarks){
+          if(mark.x<22||mark.x>w-22)continue;
+          line(mark.x,axis-7,mark.x,axis+7,mark.color,1.5);ctx.fillStyle=mark.color;ctx.beginPath();ctx.arc(mark.x,axis,mark.radius,0,Math.PI*2);ctx.fill();label(mark.text,mark.x,axis+20,mark.color);
+        }
+        label("光心 O",lensX,axis+39,"#86a5af");
+        drawArrowObject(objectX,axis,objectHeight,"#ffd166","物体");
+
+        const rayEndX=w-28;
+        line(objectX,topY,lensX,topY,"#ffd166",2);
+        if(state.lensType==="convex"){
+          const p=pointAtX(lensX,topY,lensX+absF,axis,rayEndX);arrow(lensX,topY,p.x,p.y,"#68d9e8",2.5);
+        }else{
+          const nearF={x:lensX-absF,y:axis},p=pointAtX(nearF.x,nearF.y,lensX,topY,rayEndX);arrow(lensX,topY,p.x,p.y,"#68d9e8",2.5);line(lensX,topY,nearF.x,nearF.y,"rgba(104,217,232,.45)",1.5,true);
+        }
+        const centralEnd=pointAtX(objectX,topY,lensX,axis,rayEndX);arrow(objectX,topY,centralEnd.x,centralEnd.y,"#ef8e72",2.2);
+
+        if(Number.isFinite(result.v)){
+          const imageX=lensX+result.v*scale,imageHeight=result.m*objectHeight,imageTop=axis-imageHeight;
+          if(imageX>22&&imageX<w-22&&Math.abs(imageTop-axis)<h*.48){
+            drawArrowObject(imageX,axis,imageHeight,result.v>0?"#7ee0bd":"#c9a7f0",result.v>0?"实像":"虚像",result.v<0);
+          }else label("像在画面外",result.v>0?w-30:30,axis-18,"#c9a7f0",result.v>0?"right":"left");
+          if(result.v<0){line(lensX,topY,imageX,imageTop,"rgba(104,217,232,.42)",1.5,true);line(lensX,axis,imageX,imageTop,"rgba(239,142,114,.42)",1.5,true)}
+        }else{
+          label("u = f：折射光线平行，像在无穷远",w*.5,28,"#f0c982");
+        }
+        const vText=Number.isFinite(result.v)?result.v.toFixed(1)+" cm":"∞";
+        const mText=Number.isFinite(result.m)?result.m.toFixed(2):"—";
+        setMetric(1,"焦距 f",(result.f>0?"+":"")+result.f.toFixed(0)+" cm",state.lensType==="convex"?"会聚透镜":"发散透镜");setMetric(2,"物距 u",result.u.toFixed(0)+" cm","物体到光心");setMetric(3,"像距 v",vText,result.v>0?"像在透镜右侧":result.v<0?"像在透镜左侧":"无穷远");setMetric(4,"像的性质",result.nature,"m = "+mText);
+        $("conclusion").innerHTML="<strong>动态结论：</strong>当前 "+(state.lensType==="convex"?"凸":"凹")+"透镜的成像结果为“"+result.nature+"”"+(Number.isFinite(result.v)?"，像距 "+vText+"，放大率 m="+mText+"。":"。折射光线平行，不能在有限距离得到清晰像。");
+      }
+
+      function render(){
+        if(document.querySelector(".lab-grid").hidden)return;
+        const{w,h}=fit();
+        if(state.mode==="reflection")drawReflection(w,h);else if(state.mode==="refraction")drawRefraction(w,h);else drawLens(w,h);
+        updateOutputs();
+      }
+
+      function updateOutputs(){
+        $("reflectionAngleOut").textContent=state.reflectionAngle+"°";$("reflectionAngle").value=state.reflectionAngle;
+        $("refractionAngleOut").textContent=state.refractionAngle+"°";$("refractionAngle").value=state.refractionAngle;
+        $("focalLengthOut").textContent=state.focalLength+" cm";$("focalLength").value=state.focalLength;
+        $("objectDistanceOut").textContent=state.objectDistance+" cm";$("objectDistance").value=state.objectDistance;
+      }
+
+      const modeContent={
+        reflection:{control:"反射条件",stage:"平面镜反射实验",badge:"拖动光源改变入射角",formula:"∠i = ∠r",task:"入射角改变时，反射角怎样变化？",description:"改变入射角并记录数据，观察两列角度是否始终相等。"},
+        refraction:{control:"折射条件",stage:"两种介质中的折射实验",badge:"拖动光源；交换介质寻找全反射",formula:"n₁ sin i = n₂ sin r",task:"介质和入射角怎样影响折射？",description:"改变介质组合和入射角，比较折射角，并尝试找到发生全反射的条件。"},
+        lens:{control:"成像条件",stage:"薄透镜成像实验",badge:"拖动物体改变物距 u",formula:"1/f = 1/u + 1/v",task:"物距改变时，像的位置和性质怎样变化？",description:"让物体依次位于 2f 外、2f、f 与 2f 之间、f 内，记录像距和成像性质。"}
+      };
+
+      function switchMode(mode){
+        const extended=["bench","mirror-image","dispersion"].includes(mode);
+        document.querySelectorAll(".tab").forEach(el=>{el.classList.toggle("active",el.dataset.mode===mode);el.setAttribute("aria-pressed",String(el.dataset.mode===mode))});
+        document.querySelector(".lab-grid").hidden=extended;$("opticsBench").hidden=!extended;dragging=false;
+        window.dispatchEvent(new CustomEvent("optics:mode",{detail:mode}));
+        if(extended){$("formulaChip").textContent=mode==="mirror-image"?"物与像关于镜面对称":mode==="dispersion"?"n 随波长变化":"移动 · 旋转 · 组合";return}
+        state.mode=mode;document.querySelectorAll(".control-set").forEach(el=>el.classList.toggle("active",el.dataset.controls===mode));
+        const content=modeContent[mode];$("controlTitle").textContent=content.control;$("stageTitle").textContent=content.stage;$("canvasBadge").textContent=content.badge;$("formulaChip").textContent=content.formula;$("taskTitle").textContent=content.task;$("taskDescription").textContent=content.description;$("recordNote").textContent="";
+        renderTable();render();
+      }
+
+      function currentRecord(){
+        if(state.mode==="reflection")return[state.reflectionAngle+"°",state.reflectionAngle+"°","0°"];
+        if(state.mode==="refraction"){
+          const result=refractionResult();return[mediaNames[String(state.n1)]+" → "+mediaNames[String(state.n2)],state.refractionAngle+"°",result.tir?"全反射":result.angle.toFixed(1)+"°",result.tir?"i ＞ C":"n₁sin i = n₂sin r"];
+        }
+        const result=lensResult();return[state.lensType==="convex"?"凸透镜":"凹透镜",result.f.toFixed(0),result.u.toFixed(0),Number.isFinite(result.v)?result.v.toFixed(1):"∞",Number.isFinite(result.m)?result.m.toFixed(2):"—",result.nature];
+      }
+
+      function tableSchema(){
+        if(state.mode==="reflection")return["序号","入射角 i","反射角 r","差值"];
+        if(state.mode==="refraction")return["序号","介质","入射角 i","折射角/状态","规律"];
+        return["序号","透镜","f / cm","u / cm","v / cm","放大率 m","像的性质"];
+      }
+
+      function renderTable(){
+        const headers=tableSchema();$("tableHead").innerHTML="<tr>"+headers.map(text=>"<th>"+text+"</th>").join("")+"</tr>";
+        const rows=records[state.mode];
+        $("tableBody").innerHTML=rows.length?rows.map((row,index)=>"<tr><td>"+(index+1)+"</td>"+row.map(cell=>"<td>"+cell+"</td>").join("")+"</tr>").join(""):"<tr class='empty-row'><td colspan='"+headers.length+"'>尚未记录实验数据</td></tr>";
+      }
+
+      function recordData(){
+        const rows=records[state.mode];if(rows.length>=10)rows.shift();rows.push(currentRecord());renderTable();$("recordNote").textContent="已记录第 "+rows.length+" 组数据。最多保留 10 组，便于课堂观察。";
+      }
+
+      function clearData(){records[state.mode]=[];renderTable();$("recordNote").textContent="当前实验记录已清空。"}
+
+      document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>switchMode(tab.dataset.mode)));
+      $("reflectionAngle").addEventListener("input",event=>{state.reflectionAngle=Number(event.target.value);render()});
+      $("refractionAngle").addEventListener("input",event=>{state.refractionAngle=Number(event.target.value);render()});
+      $("medium1").addEventListener("change",event=>{state.n1=Number(event.target.value);render()});
+      $("medium2").addEventListener("change",event=>{state.n2=Number(event.target.value);render()});
+      document.querySelectorAll("[data-lens]").forEach(button=>button.addEventListener("click",()=>{state.lensType=button.dataset.lens;document.querySelectorAll("[data-lens]").forEach(el=>el.classList.toggle("active",el===button));render()}));
+      $("focalLength").addEventListener("input",event=>{state.focalLength=Number(event.target.value);render()});
+      $("objectDistance").addEventListener("input",event=>{state.objectDistance=Number(event.target.value);render()});
+      $("recordData").addEventListener("click",recordData);$("clearData").addEventListener("click",clearData);
+
+      function pointerPosition(event){const rect=canvas.getBoundingClientRect();return{x:event.clientX-rect.left,y:event.clientY-rect.top}}
+      canvas.addEventListener("pointerdown",event=>{dragging=true;canvas.setPointerCapture(event.pointerId);handleDrag(event)});
+      canvas.addEventListener("pointermove",event=>{if(dragging)handleDrag(event)});
+      canvas.addEventListener("pointerup",()=>{dragging=false});canvas.addEventListener("pointercancel",()=>{dragging=false});
+      function handleDrag(event){
+        if(!geometry)return;const p=pointerPosition(event);
+        if(state.mode==="lens"){
+          state.objectDistance=Math.round(Math.max(7,Math.min(50,(geometry.lensX-p.x)/geometry.scale)));render();return;
+        }
+        const dx=Math.max(0,geometry.cx-p.x),dy=Math.max(1,geometry.cy-p.y),angle=Math.round(Math.atan2(dx,dy)*180/Math.PI),clamped=Math.max(0,Math.min(state.mode==="reflection"?80:85,angle));
+        if(state.mode==="reflection")state.reflectionAngle=clamped;else state.refractionAngle=clamped;render();
+      }
+
+      window.addEventListener("resize",render);switchMode("reflection");
+    })();
+  </script>
+  <script src="optics/physics.js?v=20260906-optics1"></script>
+  <script src="optics/drawing.js?v=20260906-optics1"></script>
+  <script src="optics/bench.js?v=20260906-optics1"></script>
+</body>
+</html>

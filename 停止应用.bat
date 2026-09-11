@@ -1,0 +1,27 @@
+@echo off
+setlocal
+chcp 65001 >nul
+cd /d "%~dp0"
+title 停止格物本地服务
+
+set "APP_ROOT=%~dp0"
+set "APP_PORT=3001"
+set "APP_MARKER=gewuphysics-inquiry-v1"
+set "LOCK_FILE=%~dp0.vinext\dev\lock.json"
+set "PID_FILE=%~dp0.vinext\dev\local-server.pid"
+
+if not exist "%LOCK_FILE%" goto NOT_RUNNING
+
+powershell.exe -NoLogo -NoProfile -NonInteractive -Command "$ErrorActionPreference='Stop'; function Fail([string]$message) { [Console]::Error.WriteLine($message); exit 1 }; function Get-ValidatedLock([object]$candidateLock) { $root=[IO.Path]::GetFullPath($env:APP_ROOT).TrimEnd([char[]]'\/'); $cwd=[IO.Path]::GetFullPath([string]$candidateLock.cwd).TrimEnd([char[]]'\/'); if ($cwd -ne $root) { Fail '拒绝停止：锁文件不属于当前项目。' }; if ([int]$candidateLock.port -ne [int]$env:APP_PORT) { Fail '拒绝停止：锁文件端口与本项目不一致。' }; $uri=[Uri][string]$candidateLock.appUrl; if ($uri.Scheme -ne 'http' -or $uri.Port -ne [int]$env:APP_PORT -or $uri.Host -notin @('127.0.0.1','localhost','::1')) { Fail '拒绝停止：锁文件中的地址不是本机固定端口。' }; try { $startedAt=[int64]$candidateLock.startedAt } catch { Fail '拒绝停止：锁文件缺少有效的启动时间。' }; if ($startedAt -le 0) { Fail '拒绝停止：锁文件缺少有效的启动时间。' }; return [pscustomobject]@{ Pid=[int]$candidateLock.pid; Uri=$uri; StartedAt=$startedAt } }; function Get-ValidatedProcess([int]$processId) { $candidate=Get-CimInstance Win32_Process -Filter ('ProcessId = ' + $processId); if ($null -eq $candidate -or $candidate.Name -ine 'node.exe') { Fail '拒绝停止：PID 不是本项目的 Node.js 进程。' }; $nodePath=[string]$candidate.ExecutablePath; $command=([string]$candidate.CommandLine).Trim(); if ([string]::IsNullOrWhiteSpace($nodePath) -or [string]::IsNullOrWhiteSpace($command)) { Fail '拒绝停止：无法确认 Vinext 进程命令行。' }; $expectedArgs=('node_modules/vinext/dist/cli.js dev --port {0} --hostname 127.0.0.1' -f [int]$env:APP_PORT); $expectedQuoted=(([char]34).ToString()+$nodePath+([char]34).ToString()+' '+$expectedArgs); $expectedBare=($nodePath+' '+$expectedArgs); if ($command -ine $expectedQuoted -and $command -ine $expectedBare) { Fail '拒绝停止：PID 不是启动器创建的精确 Vinext 开发进程。' }; return $candidate }; function Assert-StartMatches([object]$candidate,[int64]$startedAt) { $processStarted=[datetime]$candidate.CreationDate; $lockStarted=[DateTimeOffset]::FromUnixTimeMilliseconds($startedAt).LocalDateTime; if ([math]::Abs(($processStarted-$lockStarted).TotalSeconds) -gt 30) { Fail '拒绝停止：锁文件启动时间与目标进程不一致。' } }; function Assert-PortSafe([int]$processId) { $listeners=@(Get-NetTCPConnection -LocalAddress '127.0.0.1' -LocalPort ([int]$env:APP_PORT) -State Listen -ErrorAction SilentlyContinue); if ($listeners.Count -gt 0 -and $null -eq ($listeners | Where-Object { [int]$_.OwningProcess -eq $processId } | Select-Object -First 1)) { Fail '拒绝停止：固定端口当前属于其他进程。' } }; try { $lock=Get-Content -LiteralPath $env:LOCK_FILE -Raw -Encoding UTF8 | ConvertFrom-Json; $state=Get-ValidatedLock $lock; $serverPid=[int]$state.Pid; $uri=[Uri]$state.Uri; $process=Get-ValidatedProcess $serverPid; Assert-StartMatches $process ([int64]$state.StartedAt); Assert-PortSafe $serverPid; $started=[string]$process.CreationDate; if ([string]::IsNullOrWhiteSpace($started)) { Fail '拒绝停止：无法确认进程创建时间。' }; $pageHealthy=$false; $ProgressPreference='SilentlyContinue'; try { $response=Invoke-WebRequest -UseBasicParsing -Uri $uri.AbsoluteUri -TimeoutSec 3 -MaximumRedirection 0; $pageHealthy=($response.StatusCode -eq 200 -and $null -ne $response.Content -and $response.Content.Contains($env:APP_MARKER)) } catch { $pageHealthy=$false }; $latestLock=Get-Content -LiteralPath $env:LOCK_FILE -Raw -Encoding UTF8 | ConvertFrom-Json; $latestState=Get-ValidatedLock $latestLock; if ([int]$latestState.Pid -ne $serverPid -or [int64]$latestState.StartedAt -ne [int64]$state.StartedAt) { Fail '拒绝停止：验证期间锁文件身份发生变化。' }; $latestProcess=Get-ValidatedProcess $serverPid; if ([string]$latestProcess.CreationDate -ne $started) { Fail '拒绝停止：验证期间进程创建时间发生变化。' }; Assert-StartMatches $latestProcess ([int64]$latestState.StartedAt); Assert-PortSafe $serverPid; if (-not $pageHealthy) { if ($env:GEWU_STOP_DRY_RUN -eq '1') { Write-Host '服务页面异常但进程身份确认，正在停止（dry-run：仅验证，不实际停止）。' } else { Write-Host '服务页面异常但进程身份确认，正在停止。' } }; if ($env:GEWU_STOP_DRY_RUN -eq '1') { Write-Host ('验证通过：可安全停止 PID {0}。' -f $serverPid); exit 0 }; $killer=Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\taskkill.exe') -ArgumentList @('/PID',[string]$serverPid,'/T','/F') -Wait -PassThru -NoNewWindow; if ($killer.ExitCode -ne 0) { Fail ('停止进程失败，taskkill 退出码：{0}' -f $killer.ExitCode) }; for ($attempt=0; $attempt -lt 25; $attempt++) { if ($null -eq (Get-Process -Id $serverPid -ErrorAction SilentlyContinue)) { break }; Start-Sleep -Milliseconds 200 }; if ($null -ne (Get-Process -Id $serverPid -ErrorAction SilentlyContinue)) { Fail '停止超时：目标进程仍在运行。' }; if (Test-Path -LiteralPath $env:LOCK_FILE) { $remaining=Get-Content -LiteralPath $env:LOCK_FILE -Raw -Encoding UTF8 | ConvertFrom-Json; if ([int]$remaining.pid -eq $serverPid) { Remove-Item -LiteralPath $env:LOCK_FILE -Force } }; if (Test-Path -LiteralPath $env:PID_FILE) { $savedPid=[int](Get-Content -LiteralPath $env:PID_FILE -Raw); if ($savedPid -eq $serverPid) { Remove-Item -LiteralPath $env:PID_FILE -Force } }; Write-Host '格物本地服务已停止。'; exit 0 } catch { Fail ('拒绝停止：' + $_.Exception.Message) }"
+if errorlevel 1 goto STOP_REFUSED
+exit /b 0
+
+:NOT_RUNNING
+echo 未发现本项目的 Vinext 运行锁，服务可能已经停止。
+exit /b 0
+
+:STOP_REFUSED
+echo.
+echo 未结束任何未经完整确认的进程。
+pause
+exit /b 1

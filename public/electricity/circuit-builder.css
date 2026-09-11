@@ -1,0 +1,73 @@
+.tabs { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.builder-tab { min-height:56px; display:flex; align-items:center; gap:10px; padding:12px 16px; border:1px solid var(--line); border-radius:12px; color:#53615a; background:#faf9f4; text-align:left; }
+.builder-tab.active { color:#f7fff9; background:#173e35; border-color:#254f46; }
+.builder-tab strong { font-size:14px; }.builder-tab small { display:block; margin-top:4px; font-size:12px; }
+#fixedElectricLab[hidden], #circuitBuilder[hidden], .cb-empty[hidden] { display:none !important; }
+#circuitBuilder { font-size:16px; line-height:1.55; }
+#circuitBuilder button, #circuitBuilder input, #circuitBuilder select { font:inherit; font-size:14px; }
+#circuitBuilder button:not(.cb-body):not(.cb-terminal) { min-height:38px; padding:7px 12px; border:1px solid #cbd5d0; border-radius:7px; background:#fffef9; color:#294f43; }
+#circuitBuilder button:not(:disabled):hover { border-color:#2b7567; }
+#circuitBuilder button:disabled { opacity:.5; cursor:not-allowed; }
+#circuitBuilder button:focus-visible, #circuitBuilder input:focus-visible, #circuitBuilder select:focus-visible, #circuitBuilder [tabindex]:focus-visible { outline:3px solid #1a9684; outline-offset:3px; }
+.cb-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:22px 0 16px; }
+.cb-heading h2 { font-size:24px; margin:0; }.cb-heading p { font-size:14px; margin:5px 0 0; color:#596f64; }
+.cb-live { font-size:14px; padding:8px 12px; border:1px solid #b6ccc3; border-radius:20px; background:#eaf4ef; }
+.cb-live[data-state=short] { background:#fff0e7; border-color:#da966b; color:#953e19; }
+.cb-layout { display:grid; grid-template-columns:238px minmax(0,1fr); gap:18px; align-items:start; }
+.cb-sidebar { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+#circuitBuilder h3 { font-size:16px; margin:0 0 12px; }#circuitBuilder h3 small { display:block; color:#65786e; font-size:12px; font-weight:400; }
+.cb-palette { display:grid; gap:6px; }.cb-palette button { display:flex; align-items:center; gap:10px; text-align:left; }
+.cb-palette b { width:26px; height:26px; display:grid; place-items:center; color:#196551; background:#e5f1eb; border-radius:5px; font-family:monospace; }
+.cb-palette i { margin-left:auto; font-style:normal; color:#667b70; }
+.cb-inspector { display:grid; gap:8px; margin-top:22px; padding-top:20px; border-top:1px solid var(--line); }
+.cb-inspector p, .cb-inspector label, .cb-help p { font-size:14px; margin:0; }.cb-inspector small { font-size:12px; color:#65766c; }
+.cb-inspector input:not([type=range]), .cb-inspector select, .cb-toolbar select { min-height:38px; width:100%; padding:6px 8px; border:1px solid #bccdc5; border-radius:6px; background:white; color:#294f43; }
+.cb-inspector input[type=range] { width:100%; accent-color:#2b7567; }.cb-inspector output { float:right; }
+.cb-property-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }.cb-help { margin-top:20px; font-size:14px; }.cb-help summary { cursor:pointer; font-weight:600; }.cb-help p { margin:10px 0; color:#52695d; }
+.cb-workspace { overflow:hidden; min-width:0; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+.cb-toolbar { padding:12px 14px; display:flex; align-items:center; flex-wrap:wrap; gap:8px; }.cb-toolbar label { font-size:14px; }.cb-toolbar select { width:auto; max-width:190px; }.cb-toolbar-spacer { flex:1; }
+.cb-wiring-tools { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 14px; background:#f3f6f1; border-top:1px solid var(--line); font-size:13px; }
+.cb-wiring-tools select { padding:7px; min-height:38px; border:1px solid #bccdc5; border-radius:6px; color:#294f43; background:#fffef9; }.cb-wiring-tools > span { margin-left:auto; color:#617268; }
+.cb-wire-endpoints { padding:10px 12px; border-left:3px solid #297c6c; background:#eef5f0; border-radius:4px; }.cb-related-wires { display:grid; gap:6px; border-top:1px solid #d5dfd8; padding-top:12px; margin-top:8px; }#circuitBuilder .cb-related-wires button { text-align:left; font-size:12px; }#circuitBuilder .cb-related-wires button[aria-pressed=true] { background:#e3f0e8; border-color:#297c6c; }
+.cb-message { margin:0; padding:10px 14px; border-top:1px solid var(--line); font-size:14px; background:#ecf3ef; color:#345b4c; min-height:44px; }
+.cb-scroll { overflow:auto; overscroll-behavior-x:contain; background:#102235; }
+.cb-board { position:relative; width:960px; height:650px; background-color:#102235; background-image:radial-gradient(#395064 .8px,transparent .8px); background-size:20px 20px; user-select:none; }
+#cbWires { position:absolute; inset:0; width:960px; height:650px; overflow:visible; }
+#cbOverlay { position:absolute; inset:0; width:960px; height:650px; pointer-events:none; overflow:visible; }
+.cb-wire { cursor:pointer; }.cb-wire-hit { stroke:transparent; stroke-width:18; fill:none; pointer-events:stroke; }.cb-wire-line { stroke:var(--wire-color,#8edce1); stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.cb-wire:focus,.cb-wire:focus-visible { outline:none !important; }.cb-wire:focus-visible .cb-wire-hit { stroke:#ffe08a44; stroke-width:12; }
+.cb-net,.cb-bridge,.cb-junction { transition:opacity .12s; pointer-events:none; }.cb-net.is-muted,.cb-bridge.is-muted,.cb-junction.is-muted { opacity:.28; }
+.cb-bridge.is-muted { opacity:1; }.cb-bridge.is-muted .cb-wire-line { opacity:.28; }
+.cb-selected-wire { stroke:#ffe08a; stroke-width:5; fill:none; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.cb-wire-casing { fill:none; stroke:#102235; stroke-width:9; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }.cb-bridge-cut { stroke:#102235; stroke-width:7; pointer-events:none; }
+.cb-junction { stroke:#102235; stroke-width:1.5; }.cb-unrouted { stroke:#fa9d85; stroke-width:3; fill:none; stroke-dasharray:5 6; pointer-events:none; }
+.cb-segment-handle { touch-action:none; pointer-events:all; }.cb-segment-handle.horizontal { cursor:ns-resize; }.cb-segment-handle.vertical { cursor:ew-resize; }.cb-segment-handle rect { fill:#f8d67c; stroke:#102235; stroke-width:2; }.cb-segment-handle path { stroke:#59451e; stroke-width:1.5; fill:none; pointer-events:none; }.cb-segment-handle:hover rect,.cb-segment-handle:focus rect { fill:#fff1c2; stroke:#ffffff; }.cb-segment-handle:focus-visible { outline:none !important; }
+.has-invalid-route .cb-segment-handle rect { fill:#ffa58f; }.cb-end-ring { fill:none; stroke:#ffe08a; stroke-width:2; stroke-dasharray:3 3; }.cb-end-label { fill:#ffe08a; font:700 12px sans-serif; paint-order:stroke; stroke:#102235; stroke-width:4; }
+.cb-pending-wire { fill:none; stroke:#ffe08a; stroke-width:3; stroke-dasharray:7 5; }.cb-pin { fill:#ffe08a; stroke:#102235; stroke-width:2; }
+.cb-wire-legend { display:flex; flex-wrap:wrap; gap:8px 22px; margin:0; padding:10px 16px; font-size:12px; color:#627867; background:#f7faf5; }.cb-wire-legend b { display:inline-block; width:20px; color:#286b5c; font-size:18px; vertical-align:middle; }
+.cb-part { position:absolute; width:130px; height:56px; margin-left:-65px; margin-top:-28px; color:#e5f3f4; }
+.cb-rotor { position:relative; width:130px; height:56px; }
+.cb-body { width:104px; height:56px; margin:0 13px; display:block; padding:0; border:1px solid transparent; border-radius:8px; color:inherit; background:#102235; touch-action:none; cursor:grab; }
+.cb-body:active { cursor:grabbing; }.cb-body svg { width:100%; height:100%; }.cb-part.is-selected .cb-body { background:#193c4d; border-color:#ffd166; }
+.cb-part.is-lamp .cb-body { background:transparent; }.cb-part.is-lamp svg { overflow:visible; }.cb-part.is-rheostat:not(.is-vertical) .cb-part-title { bottom:calc(100% + 46px); }
+.cb-terminal { position:absolute; transform:translate(-50%,-50%); width:30px; height:30px; display:grid; place-items:center; padding:0; border:2px solid #a3c4ce; border-radius:50%; color:#eef7f7; background:#284357; cursor:crosshair; touch-action:manipulation; }
+.cb-terminal span { display:block; font-size:16px; font-weight:700; }.cb-terminal.positive { border-color:#ffb6a0; background:#a94131; }.cb-terminal.is-pending { outline:4px solid #ffd166; outline-offset:3px; }
+.cb-terminal.is-wire-end { outline:3px solid #ffe08a; outline-offset:3px; }.cb-terminal:hover { box-shadow:0 0 0 5px #8edce133; }
+.cb-part-title { position:absolute; bottom:calc(100% + 14px); left:-20px; right:-20px; text-align:center; font:700 14px Consolas,"Microsoft YaHei",sans-serif; white-space:nowrap; pointer-events:none; }.cb-part-title small { font-size:12px; font-weight:400; color:#adc6d1; }
+.cb-part-value { position:absolute; top:calc(100% + 12px); left:-25px; right:-25px; text-align:center; color:#ffd166; font:14px Consolas,"Microsoft YaHei",sans-serif; pointer-events:none; }.cb-part-value.cb-overload { color:#ffab91; }
+.cb-part.is-vertical .cb-part-title { top:-43px; bottom:auto; left:130px; right:auto; text-align:left; }
+.cb-part.is-vertical .cb-part-value { top:92px; left:130px; right:auto; text-align:left; white-space:nowrap; }
+.cb-part.is-vertical.labels-left .cb-part-title, .cb-part.is-vertical.labels-left .cb-part-value { left:auto; right:130px; text-align:right; }
+.cb-part.is-rheostat:not(.is-vertical) .cb-part-title { bottom:calc(100% + 30px); left:100px; right:auto; text-align:left; }
+.cb-part.is-rheostat:not(.is-vertical).labels-left .cb-part-title { left:auto; right:100px; text-align:right; }
+.cb-part.is-rheostat:not(.is-vertical) .cb-part-value { top:calc(100% + 32px); left:100px; right:auto; text-align:left; white-space:nowrap; }
+.cb-part.is-rheostat:not(.is-vertical).labels-left .cb-part-value { left:auto; right:100px; text-align:right; }
+.cb-empty { position:absolute; inset:190px 100px auto; text-align:center; color:#abc5d0; pointer-events:none; }.cb-empty b { display:block; color:#dcecf0; font-size:26px; }.cb-empty p { font-size:16px; }.cb-empty span { font-size:14px; color:#80cfc5; }
+.cb-feedback { border-bottom:1px solid var(--line); color:#436451; background:#f0f5ef; padding:12px 16px; font-size:14px; }.cb-feedback p { margin:0; }.cb-feedback.has-warning { background:#fff3df; color:#86441d; }.cb-feedback ul { margin:0; padding-left:20px; }
+.cb-meters { padding:16px; }.cb-section-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; }#circuitBuilder .cb-section-heading h3 { margin:0; }#circuitBuilder .cb-section-heading h3 small { display:inline; margin-left:8px; }
+#circuitBuilder #cbRecord { background:#1f5d4f; color:white; border-color:#1f5d4f; }.cb-readings { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; }.cb-readings > p { margin:0; color:#65776c; font-size:14px; }
+.cb-reading { padding:12px 14px; border:1px solid #d4e0d9; border-radius:8px; background:#f3f7f3; }.cb-reading span { display:block; font-size:14px; }.cb-reading small { display:block; font-size:12px; color:#617469; }.cb-reading strong { display:block; margin:6px 0; color:#1d5b4d; font:700 24px Consolas,"Microsoft YaHei",monospace; }.cb-reading-warning { border-color:#db996d; background:#fff0e3; }.cb-reading-warning strong { color:#a7431f; }
+.cb-records { margin-top:18px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--card); }.cb-table-scroll { overflow:auto; }.cb-records table { min-width:600px; font-size:14px; }.cb-records td { white-space:normal; vertical-align:top; line-height:1.65; }.cb-records td:nth-child(2) { max-width:500px; }.cb-records td:nth-child(3) { min-width:200px; }.cb-model { font-size:12px; color:#5f7266; line-height:1.8; margin:14px 0; }
+@media(min-width:1500px) { .cb-scroll { display:flex; justify-content:center; } }
+@media(max-width:1100px) { .tabs { grid-template-columns:repeat(3,1fr); }.cb-layout { grid-template-columns:200px minmax(0,1fr); }.cb-sidebar { padding:12px; } }
+@media(max-width:760px) { .tabs { grid-template-columns:repeat(2,1fr); }.builder-tab { grid-column:1/-1; }.cb-layout { grid-template-columns:minmax(0,1fr); }.cb-palette { grid-template-columns:repeat(2,minmax(0,1fr)); }.cb-inspector { margin-top:12px; padding-top:12px; }.cb-heading { margin-top:14px; }.cb-heading h2 { font-size:21px; }.cb-heading p { line-height:1.7; }.cb-toolbar-spacer { display:none; }.cb-help { margin-top:12px; }.cb-model { font-size:12px; } }

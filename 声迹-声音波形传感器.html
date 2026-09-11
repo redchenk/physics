@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>声迹 · 声音波形教学实验台</title>
+  <style>
+    :root {
+      --paper: #f2f1eb;
+      --card: #fffef9;
+      --ink: #16231f;
+      --muted: #69756e;
+      --line: #d5d7cf;
+      --green: #173e32;
+      --mint: #78eebe;
+      --orange: #e39a56;
+      --blue: #52a9be;
+      --scope: #10211d;
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { width: min(1420px, 100%); min-height: 100vh; margin: auto; padding: 0 38px 26px; }
+    header { height: 70px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 11px; }
+    .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; color: var(--mint); background: var(--green); font: 700 27px/1 Georgia, serif; }
+    .brand-name { display: grid; gap: 1px; }
+    .brand-name strong { font-size: 19px; letter-spacing: .08em; line-height: 1; }
+    .brand-name small { color: #7a847e; font-size: 8px; font-weight: 750; letter-spacing: .2em; }
+    .privacy { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .privacy b { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid #9ab8aa; border-radius: 50%; color: #34755c; font-size: 11px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 32px; padding: 36px 0 25px; }
+    .eyebrow { margin: 0 0 7px; color: #3b755f; font-size: 12px; font-weight: 750; letter-spacing: .13em; }
+    h1 { margin: 0 0 8px; font-size: clamp(34px, 4vw, 52px); line-height: 1.03; letter-spacing: -.055em; }
+    .intro-copy { max-width: 670px; margin: 0; color: #637068; font-size: 15px; line-height: 1.7; }
+    .control-cluster { display: flex; align-items: center; gap: 14px; flex-shrink: 0; padding-bottom: 4px; }
+    .status { display: flex; align-items: center; gap: 7px; color: #68746d; font-size: 12px; white-space: nowrap; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #a6aaa4; }
+    .status.live { color: #2b6b54; font-weight: 650; }
+    .status.live .status-dot { background: #40b984; box-shadow: 0 0 0 5px rgba(64,185,132,.13); animation: pulse 1.7s ease-in-out infinite; }
+    .actions { display: flex; gap: 8px; }
+    .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 18px; border: 1px solid transparent; border-radius: 11px; font-weight: 680; font-size: 13px; transition: transform .15s, background .15s; }
+    .button:active { transform: translateY(1px); }
+    .button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(77,156,127,.35); outline-offset: 2px; }
+    .button-primary { color: #f7fff9; background: var(--green); box-shadow: 0 6px 18px rgba(23,62,50,.17); }
+    .button-primary:hover { background: #225442; }
+    .button-outline { color: var(--ink); border-color: var(--line); background: var(--card); }
+    .button-stop { color: #933d32; background: #fbe7e3; }
+    .hidden { display: none !important; }
+    .error { display: none; margin: -10px 0 18px; padding: 11px 14px; border: 1px solid #e5b7ae; border-radius: 10px; color: #873b30; background: #fff4f1; font-size: 13px; }
+    .error.show { display: block; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--card); box-shadow: 0 9px 30px rgba(22,35,31,.05); }
+    .metric { position: relative; min-width: 0; padding: 18px 22px 17px; }
+    .metric + .metric { border-left: 1px solid var(--line); }
+    .metric::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: var(--accent); }
+    .metric:nth-child(1) { --accent: #5cc99d; }
+    .metric:nth-child(2) { --accent: var(--orange); }
+    .metric:nth-child(3) { --accent: var(--blue); }
+    .metric-label { display: flex; align-items: center; gap: 8px; color: #65716b; font-size: 12px; font-weight: 680; }
+    .metric-icon { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; color: #265e49; background: color-mix(in srgb, var(--accent), white 80%); font-size: 14px; }
+    .metric-reading { display: flex; align-items: baseline; gap: 8px; margin: 10px 0 3px; }
+    .metric-reading strong { font-family: Consolas, "SFMono-Regular", monospace; font-size: clamp(27px, 3vw, 38px); line-height: 1; letter-spacing: -.05em; }
+    .metric-reading span { color: #748079; font-size: 12px; font-weight: 650; }
+    .metric-note { margin: 0; color: #818a85; font-size: 11px; }
+    .generator-card { display: grid; gap: 18px; margin-top: 18px; padding: 22px; }
+    .generator-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+    .generator-head h2 { margin: 2px 0 5px; font-size: 20px; letter-spacing: -.025em; }
+    .generator-head p:last-child { max-width: 680px; margin: 0; color: #707c75; font-size: 11px; line-height: 1.65; }
+    .generator-badge { flex-shrink: 0; padding: 7px 10px; border: 1px solid #c7ddd2; border-radius: 999px; color: #2d7158; background: #eef8f3; font-size: 10px; font-weight: 700; }
+    .generator-layout { display: grid; grid-template-columns: minmax(280px,.82fr) minmax(0,1.18fr); gap: 20px; }
+    .generator-controls { display: grid; align-content: start; gap: 14px; padding: 17px; border: 1px solid #d9dbd3; border-radius: 13px; background: #fafaf5; }
+    .tone-field { display: grid; gap: 7px; }
+    .tone-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #53625b; font-size: 11px; font-weight: 700; }
+    .tone-label output { color: #28674f; font: 700 11px Consolas, monospace; }
+    .tone-input-row { display: grid; grid-template-columns: minmax(0,1fr) 88px; align-items: center; gap: 10px; }
+    .tone-number, .tone-select { width: 100%; min-height: 38px; border: 1px solid #cfd3cb; border-radius: 9px; color: #31453d; background: #fffef9; }
+    .tone-number { padding: 0 9px; font-family: Consolas, monospace; text-align: right; }
+    .tone-select { padding: 0 10px; }
+    .tone-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tone-preset { min-height: 30px; padding: 0 9px; border: 1px solid #d2d5ce; border-radius: 8px; color: #607069; background: #fffef9; font-size: 10px; }
+    .tone-preset.active { border-color: #4d9879; color: #275f49; background: #eaf5ef; font-weight: 700; }
+    .generator-actions { display: flex; align-items: center; gap: 8px; padding-top: 3px; }
+    .generator-actions .button { min-height: 38px; padding-inline: 14px; }
+    .generator-actions .button:disabled { cursor: not-allowed; opacity: .45; }
+    .generator-status { margin-left: auto; color: #68756e; font-size: 10px; white-space: nowrap; }
+    .generator-status.live { color: #277052; font-weight: 700; }
+    .safety-note { margin: 0; padding: 10px 11px; border-left: 3px solid var(--orange); border-radius: 3px 8px 8px 3px; color: #765f49; background: #f7efe5; font-size: 10px; line-height: 1.55; }
+    .generator-display { min-width: 0; display: grid; align-content: start; gap: 10px; }
+    .generator-wave { height: 230px; }
+    .generator-readings { display: grid; grid-template-columns: repeat(3,1fr); overflow: hidden; border: 1px solid #d9dbd3; border-radius: 10px; background: #f7f7f2; }
+    .generator-reading { min-width: 0; padding: 10px 12px; }
+    .generator-reading + .generator-reading { border-left: 1px solid #d9dbd3; }
+    .generator-reading span { display: block; margin-bottom: 3px; color: #77827c; font-size: 8px; font-weight: 700; letter-spacing: .08em; }
+    .generator-reading strong { display: block; overflow: hidden; color: #294c3e; font: 700 12px Consolas,"Microsoft YaHei",monospace; text-overflow: ellipsis; white-space: nowrap; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(290px, .9fr); gap: 18px; margin-top: 18px; }
+    .card { border: 1px solid var(--line); border-radius: 17px; background: var(--card); box-shadow: 0 8px 24px rgba(22,35,31,.045); }
+    .scope-card { min-width: 0; padding: 20px; }
+    .card-head { min-height: 45px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
+    .card-head h2, .lesson h2 { margin: 1px 0 0; font-size: 17px; letter-spacing: -.02em; }
+    .kicker { margin: 0; color: #4b7d69; font-size: 10px; font-weight: 750; letter-spacing: .13em; }
+    .scope-controls { width: min(520px, 65%); display: grid; grid-template-columns: minmax(230px,1fr) minmax(150px,.7fr); gap: 14px; }
+    .gain, .timebase { display: grid; align-items: center; gap: 8px; }
+    .gain { grid-template-columns: auto minmax(90px,1fr) 42px; }
+    .timebase { grid-template-columns: auto minmax(78px,1fr); }
+    .gain label, .gain output, .timebase label, .timebase output { color: #6f7b74; font-size: 11px; }
+    .gain output, .timebase output { font-family: Consolas, monospace; text-align: right; }
+    .timebase output { grid-column: 1/-1; margin-top: -5px; }
+    .timebase select { min-height: 31px; padding: 0 7px; border: 1px solid #ccd1ca; border-radius: 8px; color: #405149; background: #fffef9; font-size: 11px; }
+    input[type="range"] { width: 100%; accent-color: #4d9c7f; }
+    .canvas-wrap { position: relative; overflow: hidden; border: 1px solid #223a33; border-radius: 11px; background: var(--scope); }
+    canvas { display: block; width: 100%; height: 100%; }
+    .wave-wrap { height: 294px; }
+    .axis { position: absolute; color: rgba(210,231,223,.55); font: 9px Consolas, monospace; pointer-events: none; }
+    .axis-top { top: 9px; left: 11px; }
+    .axis-bottom { bottom: 9px; left: 11px; }
+    .axis-zero { top: 50%; left: 11px; transform: translateY(-50%); }
+    .axis-time { right: 11px; bottom: 9px; }
+    .scope-state { position: absolute; top: 9px; right: 11px; color: rgba(187,218,205,.66); font: 700 9px Consolas, monospace; letter-spacing: .06em; pointer-events: none; }
+    .scope-state.live { color: #7df0bd; text-shadow: 0 0 8px rgba(120,238,190,.5); }
+    .hint { position: absolute; left: 50%; top: 50%; max-width: calc(100% - 28px); transform: translate(-50%,-50%); padding: 9px 12px; border: 1px solid rgba(185,224,208,.2); border-radius: 9px; color: #c8ddd4; background: rgba(10,30,24,.84); font-size: 11px; text-align: center; white-space: nowrap; backdrop-filter: blur(8px); }
+    .lesson { padding: 22px; }
+    .lesson-title { display: flex; align-items: center; gap: 10px; padding-bottom: 17px; border-bottom: 1px solid #e1e2db; }
+    .lesson-badge { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; color: #2e7459; background: #e0f1e9; font-size: 17px; }
+    .lesson-title p { margin: 0; color: #728078; font-size: 10px; font-weight: 700; letter-spacing: .1em; }
+    .lesson-list { display: grid; gap: 2px; margin-top: 12px; }
+    .lesson-item { min-height: 76px; display: grid; grid-template-columns: 78px 1fr; align-items: center; gap: 12px; }
+    .mini-wave { width: 78px; height: 43px; }
+    .mini-axis { fill: none; stroke: #d7ddd8; }
+    .mini-line { fill: none; stroke: #398262; stroke-width: 2; stroke-linecap: round; }
+    .lesson-item strong { font-size: 13px; }
+    .lesson-item p { margin: 3px 0 0; color: #717c76; font-size: 11px; line-height: 1.55; }
+    .try { margin-top: 14px; padding: 13px 14px; border-left: 3px solid var(--orange); border-radius: 3px 9px 9px 3px; background: #f7efe5; }
+    .try strong { color: #855529; font-size: 11px; }
+    .try p { margin: 3px 0 0; color: #765f49; font-size: 11px; line-height: 1.55; }
+    .spectrum-card { grid-column: 1/-1; display: grid; grid-template-columns: minmax(170px,.4fr) minmax(0,1.6fr); gap: 22px; align-items: stretch; }
+    .spectrum-info { padding: 5px 2px; }
+    .spectrum-info p:last-child { max-width: 255px; margin: 17px 0 0; color: #768079; font-size: 11px; line-height: 1.6; }
+    .spectrum-wrap { height: 128px; overflow: visible; margin-bottom: 21px; border-radius: 9px; }
+    .frequency-axis { position: absolute; top: calc(100% + 5px); left: 0; right: 0; display: flex; justify-content: space-between; color: #7c8580; font: 8px Consolas, monospace; }
+    .compare-card { grid-column: 1/-1; padding: 22px; }
+    .compare-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 17px; }
+    .compare-head h2 { margin: 2px 0 5px; font-size: 19px; letter-spacing: -.025em; }
+    .compare-head p:last-child { max-width: 630px; margin: 0; color: #707c75; font-size: 11px; line-height: 1.6; }
+    .compare-controls { display: grid; justify-items: end; gap: 9px; flex-shrink: 0; }
+    .compare-timebase, .compare-actions { display: flex; align-items: center; gap: 10px; }
+    .compare-timebase label, .compare-window { color: #66736c; font-size: 11px; }
+    .compare-timebase select { min-height: 32px; padding: 0 8px; border: 1px solid #ccd1ca; border-radius: 8px; color: #405149; background: #fffef9; font-size: 11px; }
+    .compare-window { min-width: 82px; font-family: Consolas, monospace; text-align: right; }
+    .compare-actions { justify-content: flex-end; }
+    .record-status { color: #65716b; font-size: 11px; white-space: nowrap; }
+    .clear-button { min-height: 34px; padding-inline: 12px; color: #5f6b64; background: transparent; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .segment { overflow: hidden; border: 1px solid #d9dbd3; border-radius: 12px; background: #fafaf5; }
+    .segment-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 13px; border-bottom: 1px solid #dfe1da; }
+    .segment-title { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .segment-tag { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 7px; color: #f8fff9; background: #347b60; font: 700 11px Consolas, monospace; }
+    .segment:nth-child(2) .segment-tag { background: #c1763f; }
+    .record-button { min-height: 32px; padding: 0 11px; border-color: #ccd1c9; background: #fffef9; font-size: 11px; }
+    .record-button.recording { border-color: #d48b82; color: #9b3f35; background: #fff0ed; }
+    .record-button:disabled, .clear-button:disabled { cursor: not-allowed; opacity: .48; }
+    .segment-canvas { position: relative; height: 190px; overflow: hidden; background: #07120f; }
+    .segment-canvas canvas { width: 100%; height: 100%; }
+    .segment-empty { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(210,231,223,.58); font-size: 10px; pointer-events: none; }
+    .segment-axis, .segment-scope-state, .segment-window { position: absolute; z-index: 1; color: rgba(210,231,223,.5); font: 9px Consolas, monospace; pointer-events: none; }
+    .segment-axis { left: 9px; }
+    .segment-axis-top { top: 8px; }
+    .segment-axis-zero { top: 50%; transform: translateY(-50%); }
+    .segment-axis-bottom { bottom: 8px; }
+    .segment-scope-state { top: 8px; right: 9px; font-weight: 700; letter-spacing: .05em; }
+    .segment-scope-state.live { color: #7df0bd; text-shadow: 0 0 8px rgba(120,238,190,.5); }
+    .segment:nth-child(2) .segment-scope-state.live { color: #ffc88f; text-shadow: 0 0 8px rgba(230,173,111,.5); }
+    .segment-window { right: 9px; bottom: 8px; }
+    .segment-info { min-height: 39px; display: flex; align-items: center; gap: 13px; padding: 9px 13px; color: #6d7972; font: 10px Consolas, "Microsoft YaHei", monospace; }
+    .segment-info strong { color: #33473f; font-weight: 700; }
+    .comparison { display: none; grid-template-columns: repeat(3,1fr); gap: 1px; margin-top: 14px; overflow: hidden; border: 1px solid #d7d9d1; border-radius: 11px; background: #d7d9d1; }
+    .comparison.show { display: grid; }
+    .comparison-item { padding: 12px 14px; background: #f7f7f1; }
+    .comparison-item span { display: block; margin-bottom: 3px; color: #77827c; font-size: 9px; font-weight: 700; letter-spacing: .08em; }
+    .comparison-item strong { color: #294c3e; font-size: 12px; }
+    footer { display: flex; justify-content: space-between; gap: 24px; padding: 19px 2px 0; color: #738078; font-size: 10px; line-height: 1.6; }
+    footer p { margin: 0; }
+    footer strong { color: #53625a; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 4px rgba(64,185,132,.12); } 50% { box-shadow: 0 0 0 7px rgba(64,185,132,.04); } }
+    @media (max-width: 900px) {
+      .app { padding-inline: 22px; }
+      .intro { align-items: flex-start; flex-direction: column; padding-top: 28px; }
+      .control-cluster { width: 100%; justify-content: space-between; }
+      .workspace { grid-template-columns: 1fr; }
+      .generator-layout { grid-template-columns: 1fr; }
+      .spectrum-card { grid-column: auto; grid-template-columns: 1fr; }
+      .compare-card { grid-column: auto; }
+      .spectrum-info p:last-child { max-width: none; margin-top: 8px; }
+    }
+    @media (max-width: 620px) {
+      .app { padding-inline: 14px; }
+      header { height: 64px; }
+      .privacy span { display: none; }
+      .intro { gap: 22px; padding: 25px 2px 20px; }
+      h1 { font-size: 38px; }
+      .intro-copy { font-size: 13px; }
+      .control-cluster { align-items: stretch; flex-direction: column; }
+      .actions, .button-primary { width: 100%; }
+      .actions .button { flex: 1; }
+      .metrics { grid-template-columns: 1fr; }
+      .metric + .metric { border-left: 0; border-top: 1px solid var(--line); }
+      .metric { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 15px 17px; }
+      .metric-label { grid-column: 1; }
+      .metric-reading { grid-column: 2; grid-row: 1/3; margin: 0; }
+      .metric-reading strong { font-size: 28px; }
+      .metric-note { grid-column: 1; }
+      .scope-card, .lesson { padding: 15px; border-radius: 14px; }
+      .card-head { align-items: flex-start; }
+      .scope-card > .card-head { flex-direction: column; }
+      .scope-controls { width: 100%; grid-template-columns: 1fr 1fr; }
+      .gain { width: 100%; grid-template-columns: 1fr 38px; }
+      .gain label { grid-column: 1/-1; }
+      .timebase { grid-template-columns: 1fr 1fr; align-content: end; }
+      .wave-wrap { height: 240px; }
+      .generator-card { padding: 15px; }
+      .generator-head { flex-direction: column; gap: 10px; }
+      .generator-badge { align-self: flex-start; }
+      .generator-controls { padding: 14px; }
+      .generator-wave { height: 205px; }
+      .generator-readings { grid-template-columns: 1fr; }
+      .generator-reading + .generator-reading { border-left: 0; border-top: 1px solid #d9dbd3; }
+      .generator-actions { flex-wrap: wrap; }
+      .generator-status { width: 100%; margin-left: 0; }
+      .hint { white-space: normal; }
+      .compare-card { padding: 15px; }
+      .compare-head { flex-direction: column; gap: 12px; }
+      .compare-controls { width: 100%; justify-items: stretch; }
+      .compare-timebase, .compare-actions { width: 100%; justify-content: space-between; }
+      .compare-window { min-width: 0; }
+      .compare-grid { grid-template-columns: 1fr; }
+      .comparison { grid-template-columns: 1fr; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand"><div class="brand-mark">≋</div><div class="brand-name"><strong>声迹</strong><small>SOUNDSCOPE</small></div></div>
+      <div class="privacy"><b>✓</b><span>声音仅在本机分析，不会保存或上传</span></div>
+    </header>
+
+    <section class="intro" aria-labelledby="title">
+      <div><p class="eyebrow">声音波形传感器 · 教学实验台</p><h1 id="title">让声音变得看得见</h1><p class="intro-copy">既可以主动生成指定频率、响度和音色的声音，也可以采集麦克风输入，实时观察三种要素如何改变波形。</p></div>
+      <div class="control-cluster">
+        <div id="status" class="status"><span class="status-dot"></span><span id="statusText">麦克风待机</span></div>
+        <button id="startBtn" class="button button-primary" type="button">◉ 开始采集</button>
+        <div id="liveActions" class="actions hidden">
+          <button id="pauseBtn" class="button button-outline" type="button">Ⅱ 暂停</button>
+          <button id="stopBtn" class="button button-stop" type="button">■ 停止</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="error" class="error" role="alert"></div>
+
+    <section class="metrics" aria-label="麦克风采集测量值">
+      <article class="metric"><div class="metric-label"><span class="metric-icon">◖</span>麦克风相对响度</div><div class="metric-reading"><strong id="dbValue">—</strong><span>dBFS</span></div><p id="dbNote" class="metric-note">采集后显示振幅大小</p></article>
+      <article class="metric"><div class="metric-label"><span class="metric-icon">♪</span>麦克风音调</div><div class="metric-reading"><strong id="pitchValue">—</strong><span id="pitchUnit">Hz</span></div><p id="pitchNote" class="metric-note">采集后显示振动频率</p></article>
+      <article class="metric"><div class="metric-label"><span class="metric-icon">≋</span>麦克风音色明亮度</div><div class="metric-reading"><strong id="timbreValue">—</strong><span>kHz</span></div><p id="timbreNote" class="metric-note">由采集频谱重心估计</p></article>
+    </section>
+
+    <section class="card generator-card" aria-labelledby="generatorTitle">
+      <div class="generator-head">
+        <div><p class="kicker">♫ 声音发生器</p><h2 id="generatorTitle">主动控制声音的三要素</h2><p>精确设置频率、数字响度和波形音色，点击播放后观察同一时间窗内的振动次数、振幅和轮廓。不需要开启麦克风。</p></div>
+        <span class="generator-badge">教学合成音 · 本机播放</span>
+      </div>
+      <div class="generator-layout">
+        <div class="generator-controls">
+          <div class="tone-field">
+            <div class="tone-label"><label for="toneFrequency">频率 · 决定音调</label><output id="toneFrequencyValue">440 Hz · A4</output></div>
+            <div class="tone-input-row"><input id="toneFrequency" type="range" min="50" max="2000" step="1" value="440"><input id="toneFrequencyNumber" class="tone-number" type="number" min="50" max="2000" step="1" value="440" aria-label="精确输入频率，单位赫兹"></div>
+            <div class="tone-presets" aria-label="常用频率"><button class="tone-preset" data-frequency="220" type="button">低音 A3 · 220 Hz</button><button class="tone-preset active" data-frequency="440" type="button">标准音 A4 · 440 Hz</button><button class="tone-preset" data-frequency="880" type="button">高音 A5 · 880 Hz</button></div>
+          </div>
+          <div class="tone-field">
+            <div class="tone-label"><label for="toneVolume">数字响度 · 决定振幅</label><output id="toneVolumeValue">25% · −20.0 dBFS</output></div>
+            <input id="toneVolume" type="range" min="5" max="60" step="1" value="25">
+          </div>
+          <div class="tone-field">
+            <div class="tone-label"><label for="toneTimbre">音色 · 决定波形轮廓</label><output id="toneTimbreValue">纯音</output></div>
+            <select id="toneTimbre" class="tone-select"><option value="sine">正弦波 · 纯净柔和</option><option value="triangle">三角波 · 柔和空灵</option><option value="square">方波 · 空心饱满</option><option value="sawtooth">锯齿波 · 明亮丰富</option></select>
+          </div>
+          <div class="generator-actions"><button id="playTone" class="button button-primary" type="button">▶ 播放声音</button><button id="stopTone" class="button button-outline" type="button" disabled>■ 停止</button><span id="generatorStatus" class="generator-status" aria-live="polite">发生器待机</span></div>
+          <p class="safety-note"><strong>听力提示：</strong>先将电脑音量调低再播放，建议课堂使用音箱或耳机时保持适中音量。</p>
+        </div>
+        <div class="generator-display">
+          <div class="canvas-wrap generator-wave"><canvas id="generatorCanvas" aria-label="合成声音的实时波形图"></canvas><span class="axis axis-top">+ 振幅</span><span class="axis axis-bottom">− 振幅</span><span class="axis axis-time">时间窗 20 ms</span><div id="generatorHint" class="hint">调整参数观察波形，点击“播放声音”试听</div></div>
+          <div class="generator-readings" aria-label="合成声音参数"><div class="generator-reading"><span>音调</span><strong id="generatorPitch">440 Hz · A4</strong></div><div class="generator-reading"><span>峰值数字幅度</span><strong id="generatorLevel">−20.0 dBFS</strong></div><div class="generator-reading"><span>频率成分</span><strong id="generatorTimbre">基频为主 · 纯音</strong></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <article class="card scope-card">
+        <div class="card-head"><div><p class="kicker">≋ 时域 · 示波器</p><h2>麦克风实时波形</h2></div><div class="scope-controls"><div class="gain"><label for="gain">纵向放大</label><input id="gain" type="range" min="0.5" max="4" step="0.25" value="1.25"><output id="gainValue">1.25×</output></div><div class="timebase"><label for="timebase">时基</label><select id="timebase"><option value="0.5">0.5 ms/格</option><option value="1">1 ms/格</option><option value="2" selected>2 ms/格</option><option value="5">5 ms/格</option></select><output id="timebaseValue">总时间 20 ms</output></div></div></div>
+        <div class="canvas-wrap wave-wrap"><canvas id="waveCanvas" aria-label="示波器式麦克风实时波形图"></canvas><span class="axis axis-top">＋1.0</span><span class="axis axis-zero">0</span><span class="axis axis-bottom">−1.0</span><span id="scopeWindow" class="axis axis-time">10 格 · 20 ms</span><span id="scopeState" class="scope-state">CH1 · AUTO · WAIT</span><div id="waveHint" class="hint">点击“开始采集”，示波器将自动稳定波形</div></div>
+      </article>
+
+      <aside class="card lesson" aria-labelledby="guideTitle">
+        <div class="lesson-title"><div class="lesson-badge">◎</div><div><p>观察指南</p><h2 id="guideTitle">看懂三种变化</h2></div></div>
+        <div class="lesson-list">
+          <div class="lesson-item"><svg class="mini-wave" viewBox="0 0 88 48" aria-hidden="true"><path class="mini-axis" d="M2 24H86"/><path class="mini-line" d="M2 24C8 24 8 9 14 9S20 39 26 39 32 5 38 5 44 43 50 43 56 13 62 13 68 35 74 35 80 24 86 24"/></svg><div><strong>响度</strong><p>声音越响，波形上下摆动的幅度越大。</p></div></div>
+          <div class="lesson-item"><svg class="mini-wave" viewBox="0 0 88 48" aria-hidden="true"><path class="mini-axis" d="M2 24H86"/><path class="mini-line" d="M2 24C5 8 9 8 12 24S19 40 22 24 29 8 32 24 39 40 42 24 49 8 52 24 59 40 62 24 69 8 72 24 79 40 86 24"/></svg><div><strong>音调</strong><p>音调越高，同样时间内波形越密集。</p></div></div>
+          <div class="lesson-item"><svg class="mini-wave" viewBox="0 0 88 48" aria-hidden="true"><path class="mini-axis" d="M2 24H86"/><path class="mini-line" d="M2 24C7 2 11 7 15 24 19 37 22 35 26 24 30 9 34 13 38 24 42 40 46 40 50 24 54 5 58 8 62 24 66 35 70 31 74 24 78 14 82 16 86 24"/></svg><div><strong>音色</strong><p>频率成分不同，会形成不一样的波形轮廓。</p></div></div>
+        </div>
+        <div class="try"><strong>试试看</strong><p>在声音发生器中保持音色不变，只改变频率或响度；再保持频率相同，依次比较四种音色的波形。</p></div>
+      </aside>
+
+      <article class="card scope-card spectrum-card">
+        <div class="spectrum-info"><p class="kicker">▥ 频域</p><h2>音色频谱</h2><p>每根柱代表一段频率能量，右侧能量越多，声音通常越明亮。</p></div>
+        <div class="canvas-wrap spectrum-wrap"><canvas id="spectrumCanvas" aria-label="实时声音频谱图"></canvas><div class="frequency-axis"><span>低频 0 Hz</span><span>1 kHz</span><span>4 kHz</span><span>高频 10 kHz+</span></div></div>
+      </article>
+
+      <article class="card compare-card" aria-labelledby="compareTitle">
+        <div class="compare-head">
+          <div><p class="kicker">◫ 双通道示波器</p><h2 id="compareTitle">前后两段波形对比</h2><p>分别录制 3 秒片段 A 和片段 B。两幅波形各自自动触发，并使用相同的时基和纵向增益，方便直接比较周期、振幅与波形轮廓。</p></div>
+          <div class="compare-controls">
+            <div class="compare-timebase"><label for="compareTimebase">对比时基</label><select id="compareTimebase" aria-label="两段波形统一时基"><option value="0.5">0.5 ms/格</option><option value="1">1 ms/格</option><option value="2" selected>2 ms/格</option><option value="5">5 ms/格</option></select><output id="compareWindow" class="compare-window">10 格 · 20 ms</output></div>
+            <div class="compare-actions"><span id="recordStatus" class="record-status" aria-live="polite">开始采集后即可录制</span><button id="clearRecords" class="button button-outline clear-button" type="button" disabled>清空记录</button></div>
+          </div>
+        </div>
+        <div class="compare-grid">
+          <section class="segment" aria-label="片段 A 前段波形">
+            <div class="segment-head"><div class="segment-title"><span class="segment-tag">A</span><strong>前段波形</strong></div><button id="recordA" class="button record-button" type="button" disabled>● 录制 3 秒</button></div>
+            <div class="segment-canvas"><canvas id="segmentCanvasA" aria-label="示波器式片段 A 波形"></canvas><span class="segment-axis segment-axis-top">+1.0</span><span class="segment-axis segment-axis-zero">0</span><span class="segment-axis segment-axis-bottom">−1.0</span><span id="segmentStateA" class="segment-scope-state">A · AUTO · WAIT</span><span id="segmentWindowA" class="segment-window">2 ms/格</span><div id="segmentEmptyA" class="segment-empty">尚未记录</div></div>
+            <div id="segmentInfoA" class="segment-info"><span>等待片段 A</span></div>
+          </section>
+          <section class="segment" aria-label="片段 B 后段波形">
+            <div class="segment-head"><div class="segment-title"><span class="segment-tag">B</span><strong>后段波形</strong></div><button id="recordB" class="button record-button" type="button" disabled>● 录制 3 秒</button></div>
+            <div class="segment-canvas"><canvas id="segmentCanvasB" aria-label="示波器式片段 B 波形"></canvas><span class="segment-axis segment-axis-top">+1.0</span><span class="segment-axis segment-axis-zero">0</span><span class="segment-axis segment-axis-bottom">−1.0</span><span id="segmentStateB" class="segment-scope-state">B · AUTO · WAIT</span><span id="segmentWindowB" class="segment-window">2 ms/格</span><div id="segmentEmptyB" class="segment-empty">尚未记录</div></div>
+            <div id="segmentInfoB" class="segment-info"><span>等待片段 B</span></div>
+          </section>
+        </div>
+        <div id="comparison" class="comparison" aria-live="polite">
+          <div class="comparison-item"><span>响度变化</span><strong id="compareDb">—</strong></div>
+          <div class="comparison-item"><span>音调变化</span><strong id="comparePitch">—</strong></div>
+          <div class="comparison-item"><span>音色变化</span><strong id="compareTimbre">—</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <footer><p><strong>教学提示：</strong>dBFS 是麦克风输入的相对电平，并非实际声压级 dB SPL；不同设备的读数不可直接比较。</p><p>建议戴耳机，避免扬声器声音再次进入麦克风。</p></footer>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const waveCanvas = $("waveCanvas");
+      const spectrumCanvas = $("spectrumCanvas");
+      const startBtn = $("startBtn");
+      const pauseBtn = $("pauseBtn");
+      const stopBtn = $("stopBtn");
+      const liveActions = $("liveActions");
+      const status = $("status");
+      const statusText = $("statusText");
+      const errorBox = $("error");
+      const waveHint = $("waveHint");
+      const gainInput = $("gain");
+      const gainValue = $("gainValue");
+      const timebaseInput = $("timebase");
+      const timebaseValue = $("timebaseValue");
+      const scopeWindow = $("scopeWindow");
+      const scopeState = $("scopeState");
+      const recordButtons = { A: $("recordA"), B: $("recordB") };
+      const segmentCanvases = { A: $("segmentCanvasA"), B: $("segmentCanvasB") };
+      const segmentEmpty = { A: $("segmentEmptyA"), B: $("segmentEmptyB") };
+      const segmentInfo = { A: $("segmentInfoA"), B: $("segmentInfoB") };
+      const segmentStates = { A: $("segmentStateA"), B: $("segmentStateB") };
+      const segmentWindows = { A: $("segmentWindowA"), B: $("segmentWindowB") };
+      const compareTimebase = $("compareTimebase");
+      const compareWindow = $("compareWindow");
+      const recordStatus = $("recordStatus");
+      const clearRecords = $("clearRecords");
+      const generatorCanvas = $("generatorCanvas");
+      const toneFrequency = $("toneFrequency");
+      const toneFrequencyNumber = $("toneFrequencyNumber");
+      const toneVolume = $("toneVolume");
+      const toneTimbre = $("toneTimbre");
+      const playTone = $("playTone");
+      const stopTone = $("stopTone");
+      const generatorStatus = $("generatorStatus");
+      const generatorHint = $("generatorHint");
+
+      let audioContext = null;
+      let analyser = null;
+      let mediaStream = null;
+      let sourceNode = null;
+      let recorderNode = null;
+      let silentGain = null;
+      let animationId = 0;
+      let listening = false;
+      let paused = false;
+      let lastMetrics = 0;
+      let lastScopeData = null;
+      let latestMetrics = { db: -60, pitch: 0, centroid: 0 };
+      let recordingSlot = null;
+      let recordingStarted = 0;
+      let recordingChunks = [];
+      let recordingPitches = [];
+      let recordingCentroids = [];
+      let synthContext = null;
+      let synthOscillator = null;
+      let synthGain = null;
+      let synthPlaying = false;
+      let generatorAnimationId = 0;
+      const recordings = { A: null, B: null };
+      const RECORDING_MS = 3000;
+      const timbreInfo = {
+        sine: { label: "纯音", detail: "基频为主 · 纯音" },
+        triangle: { label: "柔和", detail: "少量奇次谐波 · 柔和" },
+        square: { label: "饱满", detail: "丰富奇次谐波 · 饱满" },
+        sawtooth: { label: "明亮", detail: "整数次谐波丰富 · 明亮" }
+      };
+
+      function fitCanvas(canvas) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+        const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+        if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+        return { width, height, dpr };
+      }
+
+      function grid(context, width, height, dpr) {
+        context.fillStyle = "#10211d";
+        context.fillRect(0, 0, width, height);
+        context.strokeStyle = "rgba(143,175,164,.14)";
+        context.lineWidth = dpr;
+        for (let x = 0; x <= width; x += width / 10) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke(); }
+        for (let y = 0; y <= height; y += height / 6) { context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke(); }
+        context.strokeStyle = "rgba(177,224,203,.34)";
+        context.beginPath(); context.moveTo(0, height / 2); context.lineTo(width, height / 2); context.stroke();
+      }
+
+      function oscilloscopeGrid(context, width, height, dpr) {
+        context.fillStyle = "#07120f";
+        context.fillRect(0, 0, width, height);
+        context.lineWidth = Math.max(1, .55 * dpr);
+        context.strokeStyle = "rgba(83,139,115,.105)";
+        for (let i = 1; i < 50; i++) {
+          if (i % 5 === 0) continue;
+          const x = i / 50 * width;
+          context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke();
+        }
+        for (let i = 1; i < 40; i++) {
+          if (i % 5 === 0) continue;
+          const y = i / 40 * height;
+          context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke();
+        }
+        context.lineWidth = Math.max(1, .9 * dpr);
+        context.strokeStyle = "rgba(103,173,143,.24)";
+        for (let i = 0; i <= 10; i++) {
+          const x = i / 10 * width;
+          context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke();
+        }
+        for (let i = 0; i <= 8; i++) {
+          const y = i / 8 * height;
+          context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke();
+        }
+        context.lineWidth = 1.2 * dpr;
+        context.strokeStyle = "rgba(138,213,181,.42)";
+        context.beginPath(); context.moveTo(0, height / 2); context.lineTo(width, height / 2); context.stroke();
+        context.beginPath(); context.moveTo(width / 2, 0); context.lineTo(width / 2, height); context.stroke();
+        context.strokeStyle = "rgba(138,213,181,.5)";
+        for (let i = 1; i < 50; i++) {
+          const x = i / 50 * width;
+          context.beginPath(); context.moveTo(x, height / 2 - 2.5 * dpr); context.lineTo(x, height / 2 + 2.5 * dpr); context.stroke();
+        }
+        for (let i = 1; i < 40; i++) {
+          const y = i / 40 * height;
+          context.beginPath(); context.moveTo(width / 2 - 2.5 * dpr, y); context.lineTo(width / 2 + 2.5 * dpr, y); context.stroke();
+        }
+      }
+
+      function updateScopeLabels() {
+        const totalMs = Number(timebaseInput.value) * 10;
+        const shown = Number.isInteger(totalMs) ? totalMs.toFixed(0) : totalMs.toFixed(1);
+        timebaseValue.textContent = "总时间 " + shown + " ms";
+        scopeWindow.textContent = "10 格 · " + shown + " ms";
+      }
+
+      function findScopeTrigger(samples, sampleCount) {
+        let level = 0;
+        for (let i = 0; i < samples.length; i++) level += samples[i];
+        level /= samples.length || 1;
+        let peak = 0;
+        for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i] - level));
+        const maxStart = Math.max(0, samples.length - sampleCount);
+        const preTrigger = Math.min(Math.floor(sampleCount * .12), maxStart);
+        if (peak < .006 || maxStart < 2) return { start: Math.floor(maxStart / 2), level, triggered: false };
+        let trigger = -1, bestSlope = 0;
+        const last = Math.min(samples.length - 1, maxStart + preTrigger);
+        for (let i = Math.max(1, preTrigger); i <= last; i++) {
+          const slope = samples[i] - samples[i - 1];
+          if (samples[i - 1] <= level && samples[i] > level && slope > bestSlope) { bestSlope = slope; trigger = i; }
+        }
+        return trigger >= 0 ? { start: Math.max(0, Math.min(maxStart, trigger - preTrigger)), level, triggered: true } : { start: Math.floor(maxStart / 2), level, triggered: false };
+      }
+
+      function drawScopeTrace(timeData) {
+        const size = fitCanvas(waveCanvas);
+        const context = waveCanvas.getContext("2d");
+        oscilloscopeGrid(context, size.width, size.height, size.dpr);
+        const windowSeconds = Number(timebaseInput.value) * 10 / 1000;
+        const sampleCount = Math.max(64, Math.min(timeData.length, Math.round(audioContext.sampleRate * windowSeconds)));
+        const trigger = findScopeTrigger(timeData, sampleCount);
+        const gain = Number(gainInput.value);
+        context.save();
+        context.beginPath(); context.rect(0, 0, size.width, size.height); context.clip();
+        context.strokeStyle = "#7dffc4";
+        context.shadowColor = "rgba(93,255,183,.7)";
+        context.shadowBlur = 7 * size.dpr;
+        context.lineWidth = 1.55 * size.dpr;
+        context.lineJoin = "round";
+        context.beginPath();
+        for (let x = 0; x < size.width; x++) {
+          const position = trigger.start + x / Math.max(1, size.width - 1) * (sampleCount - 1);
+          const lower = Math.floor(position);
+          const fraction = position - lower;
+          const sample = (timeData[lower] || 0) * (1 - fraction) + (timeData[Math.min(timeData.length - 1, lower + 1)] || 0) * fraction - trigger.level;
+          const y = size.height / 2 - sample * gain * size.height * .43;
+          x ? context.lineTo(x, y) : context.moveTo(x, y);
+        }
+        context.stroke();
+        context.shadowBlur = 0;
+        context.restore();
+        scopeState.textContent = paused ? "CH1 · AUTO · HOLD" : trigger.triggered ? "CH1 · AUTO · TRIG" : "CH1 · AUTO · WAIT";
+        scopeState.classList.toggle("live", !paused && trigger.triggered);
+      }
+
+      function drawIdle() {
+        if (listening) return;
+        const ws = fitCanvas(waveCanvas);
+        const wc = waveCanvas.getContext("2d");
+        oscilloscopeGrid(wc, ws.width, ws.height, ws.dpr);
+        wc.strokeStyle = "rgba(125,255,196,.72)";
+        wc.shadowColor = "rgba(93,255,183,.35)";
+        wc.shadowBlur = 6 * ws.dpr;
+        wc.lineWidth = 1.6 * ws.dpr;
+        wc.beginPath();
+        for (let x = 0; x < ws.width; x++) {
+          const t = x / ws.width;
+          const y = ws.height / 2 + Math.sin(t * Math.PI * 10) * Math.sin(Math.PI * t) * ws.height * .14;
+          x ? wc.lineTo(x, y) : wc.moveTo(x, y);
+        }
+        wc.stroke();
+        wc.shadowBlur = 0;
+        scopeState.textContent = "CH1 · AUTO · WAIT";
+        scopeState.classList.remove("live");
+        updateScopeLabels();
+
+        const ss = fitCanvas(spectrumCanvas);
+        const sc = spectrumCanvas.getContext("2d");
+        sc.fillStyle = "#10211d"; sc.fillRect(0, 0, ss.width, ss.height);
+        const bars = 44, gap = 3 * ss.dpr, barWidth = ss.width / bars - gap;
+        for (let i = 0; i < bars; i++) {
+          const h = Math.max(2, Math.exp(-i / 12) * (.42 + Math.sin(i * 1.7) * .12) * ss.height);
+          sc.fillStyle = i < 16 ? "rgba(120,238,190,.65)" : "rgba(98,188,208,.42)";
+          sc.fillRect(i * (barWidth + gap), ss.height - h, barWidth, h);
+        }
+      }
+
+      function pitchFrom(buffer, sampleRate) {
+        let rms = 0;
+        for (let i = 0; i < buffer.length; i++) rms += buffer[i] * buffer[i];
+        rms = Math.sqrt(rms / buffer.length);
+        if (rms < .008) return { frequency: 0, clarity: 0 };
+        const minLag = Math.floor(sampleRate / 1000);
+        const maxLag = Math.min(Math.floor(sampleRate / 65), buffer.length - 1);
+        let bestLag = -1, best = 0;
+        for (let lag = minLag; lag <= maxLag; lag++) {
+          let correlation = 0, normA = 0, normB = 0;
+          const limit = buffer.length - lag;
+          for (let i = 0; i < limit; i++) {
+            correlation += buffer[i] * buffer[i + lag];
+            normA += buffer[i] * buffer[i];
+            normB += buffer[i + lag] * buffer[i + lag];
+          }
+          correlation /= Math.sqrt(normA * normB) || 1;
+          if (correlation > best) { best = correlation; bestLag = lag; }
+        }
+        return bestLag > 0 && best >= .55 ? { frequency: sampleRate / bestLag, clarity: best } : { frequency: 0, clarity: best };
+      }
+
+      function noteName(frequency) {
+        if (!frequency) return "—";
+        const names = ["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+        const midi = Math.round(69 + 12 * Math.log2(frequency / 440));
+        return names[((midi % 12) + 12) % 12] + (Math.floor(midi / 12) - 1);
+      }
+
+      function toneGainValue() {
+        return Number(toneVolume.value) / 100 * .4;
+      }
+
+      function toneSample(type, phase) {
+        if (type === "square") return Math.sin(phase) >= 0 ? 1 : -1;
+        if (type === "triangle") return 2 / Math.PI * Math.asin(Math.sin(phase));
+        if (type === "sawtooth") {
+          const cycle = phase / (Math.PI * 2);
+          return 2 * (cycle - Math.floor(cycle + .5));
+        }
+        return Math.sin(phase);
+      }
+
+      function renderGenerator(frameTime = 0) {
+        const size = fitCanvas(generatorCanvas);
+        const context = generatorCanvas.getContext("2d");
+        grid(context, size.width, size.height, size.dpr);
+        const frequency = Number(toneFrequency.value);
+        const type = toneTimbre.value;
+        const amplitude = Number(toneVolume.value) / 100;
+        const phaseShift = synthPlaying ? frameTime * .0025 : 0;
+        const colors = { sine: "#78eebe", triangle: "#69d4d9", square: "#e6ad6f", sawtooth: "#d59cf0" };
+        context.strokeStyle = colors[type];
+        context.lineWidth = 1.8 * size.dpr;
+        context.shadowColor = synthPlaying ? colors[type] : "transparent";
+        context.shadowBlur = synthPlaying ? 9 * size.dpr : 0;
+        context.beginPath();
+        const duration = .02;
+        for (let x = 0; x < size.width; x++) {
+          const time = x / Math.max(1, size.width - 1) * duration;
+          const sample = toneSample(type, Math.PI * 2 * frequency * time + phaseShift);
+          const y = size.height / 2 - sample * amplitude * size.height * .7;
+          x ? context.lineTo(x, y) : context.moveTo(x, y);
+        }
+        context.stroke();
+        context.shadowBlur = 0;
+        context.fillStyle = synthPlaying ? "rgba(120,238,190,.82)" : "rgba(200,220,212,.56)";
+        context.font = 10 * size.dpr + "px Consolas, monospace";
+        context.textAlign = "right";
+        context.fillText(synthPlaying ? "正在播放" : "参数预览", size.width - 11 * size.dpr, 18 * size.dpr);
+      }
+
+      function generatorLoop(frameTime) {
+        renderGenerator(frameTime);
+        if (synthPlaying) generatorAnimationId = requestAnimationFrame(generatorLoop);
+      }
+
+      function updateGeneratorParameters() {
+        const frequency = Number(toneFrequency.value);
+        const gain = toneGainValue();
+        const db = 20 * Math.log10(gain);
+        const info = timbreInfo[toneTimbre.value];
+        $("toneFrequencyValue").textContent = frequency + " Hz · " + noteName(frequency);
+        $("toneVolumeValue").textContent = toneVolume.value + "% · " + db.toFixed(1).replace("-", "−") + " dBFS";
+        $("toneTimbreValue").textContent = info.label;
+        $("generatorPitch").textContent = frequency + " Hz · " + noteName(frequency);
+        $("generatorLevel").textContent = db.toFixed(1).replace("-", "−") + " dBFS";
+        $("generatorTimbre").textContent = info.detail;
+        document.querySelectorAll("[data-frequency]").forEach(button => button.classList.toggle("active", Number(button.dataset.frequency) === frequency));
+        if (synthOscillator && synthContext) {
+          synthOscillator.frequency.setTargetAtTime(frequency, synthContext.currentTime, .012);
+          synthOscillator.type = toneTimbre.value;
+        }
+        if (synthGain && synthContext) synthGain.gain.setTargetAtTime(gain, synthContext.currentTime, .018);
+        if (!synthPlaying) renderGenerator();
+      }
+
+      function setToneFrequency(value) {
+        const frequency = Math.max(50, Math.min(2000, Math.round(Number(value) || 440)));
+        toneFrequency.value = String(frequency);
+        toneFrequencyNumber.value = String(frequency);
+        updateGeneratorParameters();
+      }
+
+      async function startGenerator() {
+        if (synthPlaying) return;
+        errorBox.classList.remove("show");
+        if (listening) await stop();
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) throw new Error("AudioContext unavailable");
+          if (!synthContext || synthContext.state === "closed") synthContext = new AudioContextClass();
+          await synthContext.resume();
+          const oscillator = synthContext.createOscillator();
+          const outputGain = synthContext.createGain();
+          oscillator.type = toneTimbre.value;
+          oscillator.frequency.value = Number(toneFrequency.value);
+          outputGain.gain.setValueAtTime(0, synthContext.currentTime);
+          oscillator.connect(outputGain);
+          outputGain.connect(synthContext.destination);
+          oscillator.start();
+          outputGain.gain.linearRampToValueAtTime(toneGainValue(), synthContext.currentTime + .035);
+          synthOscillator = oscillator;
+          synthGain = outputGain;
+          synthPlaying = true;
+          playTone.disabled = true;
+          stopTone.disabled = false;
+          generatorStatus.textContent = "声音播放中";
+          generatorStatus.classList.add("live");
+          generatorHint.classList.add("hidden");
+          cancelAnimationFrame(generatorAnimationId);
+          generatorLoop(performance.now());
+        } catch (error) {
+          generatorStatus.textContent = "无法播放，请检查浏览器音频设置";
+          generatorStatus.classList.remove("live");
+        }
+      }
+
+      function stopGenerator() {
+        if (!synthPlaying) return;
+        const oscillator = synthOscillator;
+        const outputGain = synthGain;
+        const now = synthContext.currentTime;
+        outputGain.gain.cancelScheduledValues(now);
+        outputGain.gain.setValueAtTime(outputGain.gain.value, now);
+        outputGain.gain.linearRampToValueAtTime(0, now + .035);
+        oscillator.stop(now + .045);
+        oscillator.onended = () => { oscillator.disconnect(); outputGain.disconnect(); };
+        synthOscillator = null;
+        synthGain = null;
+        synthPlaying = false;
+        playTone.disabled = false;
+        stopTone.disabled = true;
+        generatorStatus.textContent = "发生器待机";
+        generatorStatus.classList.remove("live");
+        generatorHint.classList.remove("hidden");
+        cancelAnimationFrame(generatorAnimationId);
+        renderGenerator();
+      }
+
+      function median(values) {
+        if (!values.length) return 0;
+        const sorted = values.slice().sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+      }
+
+      function drawRecorded(slot) {
+        const canvas = segmentCanvases[slot];
+        const size = fitCanvas(canvas);
+        const context = canvas.getContext("2d");
+        oscilloscopeGrid(context, size.width, size.height, size.dpr);
+        const record = recordings[slot];
+        const msPerDivision = Number(compareTimebase.value);
+        segmentWindows[slot].textContent = msPerDivision + " ms/格";
+        if (!record || !record.samples.length) {
+          segmentStates[slot].textContent = slot + " · AUTO · WAIT";
+          segmentStates[slot].classList.remove("live");
+          return;
+        }
+
+        const samples = record.samples;
+        const sampleRate = record.sampleRate || 48000;
+        const sampleCount = Math.max(64, Math.min(samples.length, Math.round(sampleRate * msPerDivision * 10 / 1000)));
+        const trigger = findScopeTrigger(samples, sampleCount);
+        const gain = Number(gainInput.value);
+        const color = slot === "A" ? "#78eebe" : "#e6ad6f";
+        context.save();
+        context.beginPath(); context.rect(0, 0, size.width, size.height); context.clip();
+        context.strokeStyle = color;
+        context.shadowColor = slot === "A" ? "rgba(93,255,183,.65)" : "rgba(255,174,96,.58)";
+        context.shadowBlur = 6 * size.dpr;
+        context.lineWidth = 1.45 * size.dpr;
+        context.lineJoin = "round";
+        context.beginPath();
+        for (let x = 0; x < size.width; x++) {
+          const position = trigger.start + x / Math.max(1, size.width - 1) * (sampleCount - 1);
+          const lower = Math.floor(position);
+          const fraction = position - lower;
+          const sample = (samples[lower] || 0) * (1 - fraction) + (samples[Math.min(samples.length - 1, lower + 1)] || 0) * fraction - trigger.level;
+          const y = size.height / 2 - sample * gain * size.height * .43;
+          x ? context.lineTo(x, y) : context.moveTo(x, y);
+        }
+        context.stroke();
+        context.shadowBlur = 0;
+        context.restore();
+        segmentStates[slot].textContent = slot + " · AUTO · " + (trigger.triggered ? "TRIG" : "WAIT");
+        segmentStates[slot].classList.toggle("live", trigger.triggered);
+      }
+
+      function updateCompareScope() {
+        const totalMs = Number(compareTimebase.value) * 10;
+        const shown = Number.isInteger(totalMs) ? totalMs.toFixed(0) : totalMs.toFixed(1);
+        compareWindow.textContent = "10 格 · " + shown + " ms";
+        drawRecorded("A");
+        drawRecorded("B");
+      }
+
+      function formatDifference(value, unit, higher, lower) {
+        if (Math.abs(value) < .05) return "前后基本一致";
+        return "B 比 A " + (value > 0 ? higher : lower) + " " + Math.abs(value).toFixed(1) + " " + unit;
+      }
+
+      function updateComparison() {
+        const a = recordings.A, b = recordings.B;
+        $("comparison").classList.toggle("show", Boolean(a && b));
+        clearRecords.disabled = !(a || b) || Boolean(recordingSlot);
+        if (!a || !b) return;
+
+        $("compareDb").textContent = formatDifference(b.db - a.db, "dB", "更响", "更轻");
+        if (a.pitch && b.pitch) {
+          const semitones = 12 * Math.log2(b.pitch / a.pitch);
+          $("comparePitch").textContent = Math.abs(semitones) < .2 ? "前后音调接近" : "B 比 A " + (semitones > 0 ? "更高" : "更低") + " " + Math.abs(semitones).toFixed(1) + " 个半音";
+        } else {
+          $("comparePitch").textContent = "其中一段未检测到稳定音高";
+        }
+        $("compareTimbre").textContent = formatDifference((b.centroid - a.centroid) / 1000, "kHz", "更明亮", "更柔和");
+      }
+
+      function updateRecordButtons() {
+        for (const slot of ["A", "B"]) {
+          const button = recordButtons[slot];
+          button.disabled = !listening || Boolean(recordingSlot && recordingSlot !== slot);
+          button.classList.toggle("recording", recordingSlot === slot);
+          if (recordingSlot === slot) {
+            const elapsed = Math.min(RECORDING_MS, performance.now() - recordingStarted);
+            button.textContent = "● 录制中 " + ((RECORDING_MS - elapsed) / 1000).toFixed(1) + "s";
+          } else {
+            button.textContent = recordings[slot] ? "↻ 重录 3 秒" : "● 录制 3 秒";
+          }
+        }
+      }
+
+      function showRecordError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.add("show");
+        errorBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      function startRecording(slot) {
+        errorBox.classList.remove("show");
+        if (!listening) { showRecordError("请先点击页面上方的“开始采集”，再录制对比片段。"); return; }
+        if (paused) { showRecordError("请先继续实时波形，再开始录制片段。"); return; }
+        if (recordingSlot) return;
+        recordingSlot = slot;
+        recordingStarted = performance.now();
+        recordingChunks = [];
+        recordingPitches = [];
+        recordingCentroids = [];
+        pauseBtn.disabled = true;
+        clearRecords.disabled = true;
+        recordStatus.textContent = "正在录制片段 " + slot + "…请持续发声";
+        updateRecordButtons();
+      }
+
+      function finishRecording() {
+        const slot = recordingSlot;
+        if (!slot) return;
+        const sampleCount = recordingChunks.reduce((total, chunk) => total + chunk.length, 0);
+        if (!sampleCount) {
+          recordingSlot = null;
+          pauseBtn.disabled = false;
+          recordStatus.textContent = "未收到声音数据，请重试";
+          updateRecordButtons();
+          return;
+        }
+        const samples = new Float32Array(sampleCount);
+        let offset = 0, squareSum = 0;
+        for (const chunk of recordingChunks) { samples.set(chunk, offset); offset += chunk.length; }
+        for (let i = 0; i < samples.length; i++) squareSum += samples[i] * samples[i];
+        const rms = Math.sqrt(squareSum / samples.length);
+        const db = rms ? Math.max(-60, 20 * Math.log10(rms)) : -60;
+        const pitch = median(recordingPitches.filter(value => value > 0));
+        const centroid = median(recordingCentroids.filter(value => value > 0));
+        recordings[slot] = { samples, db, pitch, centroid, sampleRate: audioContext.sampleRate, duration: samples.length / audioContext.sampleRate };
+
+        segmentEmpty[slot].classList.add("hidden");
+        segmentInfo[slot].innerHTML = "<strong>" + db.toFixed(1) + " dBFS</strong><span>" + (pitch ? pitch.toFixed(0) + " Hz · " + noteName(pitch) : "音高不稳定") + "</span><span>音色 " + (centroid / 1000).toFixed(1) + " kHz</span>";
+        recordingSlot = null;
+        recordingChunks = [];
+        pauseBtn.disabled = false;
+        recordStatus.textContent = "片段 " + slot + " 已记录";
+        drawRecorded(slot);
+        updateRecordButtons();
+        updateComparison();
+      }
+
+      function cancelRecording() {
+        if (!recordingSlot) return;
+        recordingSlot = null;
+        recordingChunks = [];
+        pauseBtn.disabled = false;
+        recordStatus.textContent = "录制已取消";
+        updateRecordButtons();
+        updateComparison();
+      }
+
+      function clearRecordedSegments() {
+        if (recordingSlot) return;
+        recordings.A = recordings.B = null;
+        for (const slot of ["A", "B"]) {
+          segmentEmpty[slot].classList.remove("hidden");
+          segmentInfo[slot].innerHTML = "<span>等待片段 " + slot + "</span>";
+          drawRecorded(slot);
+        }
+        recordStatus.textContent = listening ? "已清空，可以重新录制" : "开始采集后即可录制";
+        updateRecordButtons();
+        updateComparison();
+      }
+
+      function setMetrics(timeData, frequencyData) {
+        let sum = 0;
+        for (let i = 0; i < timeData.length; i++) sum += timeData[i] * timeData[i];
+        const rms = Math.sqrt(sum / timeData.length);
+        const db = rms ? Math.max(-60, 20 * Math.log10(rms)) : -60;
+        const result = pitchFrom(timeData.subarray(0, 2048), audioContext.sampleRate);
+        const binHz = audioContext.sampleRate / analyser.fftSize;
+        let weighted = 0, total = 0;
+        for (let i = 1; i < frequencyData.length; i++) { weighted += i * binHz * frequencyData[i]; total += frequencyData[i]; }
+        const centroid = total ? weighted / total : 0;
+        latestMetrics = { db, pitch: result.frequency, centroid };
+        if (recordingSlot) {
+          if (result.frequency) recordingPitches.push(result.frequency);
+          if (centroid) recordingCentroids.push(centroid);
+        }
+
+        $("dbValue").textContent = db.toFixed(1);
+        $("dbNote").textContent = db > -12 ? "较响" : db > -28 ? "适中" : db > -48 ? "轻柔" : "安静";
+        $("pitchValue").textContent = result.frequency ? result.frequency.toFixed(0) : "—";
+        $("pitchUnit").textContent = result.frequency ? "Hz · " + noteName(result.frequency) : "Hz";
+        $("pitchNote").textContent = result.frequency ? "基频可信度 " + Math.round(result.clarity * 100) + "%" : "未检测到稳定音高";
+        $("timbreValue").textContent = centroid ? (centroid / 1000).toFixed(1) : "—";
+        $("timbreNote").textContent = centroid > 3000 ? "明亮" : centroid > 1400 ? "均衡" : centroid > 0 ? "柔和" : "待测";
+      }
+
+      function draw() {
+        if (!analyser) return;
+        const timeData = new Float32Array(analyser.fftSize);
+        const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getFloatTimeDomainData(timeData);
+        analyser.getByteFrequencyData(frequencyData);
+
+        if (!paused) {
+          lastScopeData = timeData;
+          drawScopeTrace(timeData);
+
+          const ss = fitCanvas(spectrumCanvas), sc = spectrumCanvas.getContext("2d");
+          sc.fillStyle = "#10211d"; sc.fillRect(0, 0, ss.width, ss.height);
+          const bars = 80, usableBins = Math.min(frequencyData.length, Math.ceil(10000 / (audioContext.sampleRate / analyser.fftSize)));
+          const gap = 2 * ss.dpr, barWidth = ss.width / bars - gap;
+          for (let i = 0; i < bars; i++) {
+            const start = Math.floor(Math.pow(i / bars, 1.8) * usableBins);
+            const end = Math.max(start + 1, Math.floor(Math.pow((i + 1) / bars, 1.8) * usableBins));
+            let peak = 0;
+            for (let bin = start; bin < end; bin++) peak = Math.max(peak, frequencyData[bin] || 0);
+            const h = peak / 255 * ss.height * .9;
+            sc.fillStyle = i < 32 ? "#78eebe" : i < 56 ? "#62bcd0" : "#e6ad6f";
+            sc.globalAlpha = .45 + peak / 255 * .55;
+            sc.fillRect(i * (barWidth + gap), ss.height - h, Math.max(1, barWidth), h);
+          }
+          sc.globalAlpha = 1;
+          const now = performance.now();
+          if (now - lastMetrics > 150) { lastMetrics = now; setMetrics(timeData, frequencyData); }
+          if (recordingSlot) {
+            updateRecordButtons();
+            if (now - recordingStarted >= RECORDING_MS) finishRecording();
+          }
+        }
+        animationId = requestAnimationFrame(draw);
+      }
+
+      async function start() {
+        errorBox.classList.remove("show");
+        if (synthPlaying) stopGenerator();
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          errorBox.textContent = "当前浏览器不允许本地文件访问麦克风。请改用最新版 Chrome 或 Edge 打开此文件。";
+          errorBox.classList.add("show");
+          return;
+        }
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioContext = new AudioContextClass();
+          await audioContext.resume();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 8192;
+          analyser.smoothingTimeConstant = .72;
+          sourceNode = audioContext.createMediaStreamSource(mediaStream);
+          sourceNode.connect(analyser);
+          recorderNode = audioContext.createScriptProcessor(2048, 1, 1);
+          silentGain = audioContext.createGain();
+          silentGain.gain.value = 0;
+          sourceNode.connect(recorderNode);
+          recorderNode.connect(silentGain);
+          silentGain.connect(audioContext.destination);
+          recorderNode.onaudioprocess = (event) => {
+            if (!recordingSlot) return;
+            const input = event.inputBuffer.getChannelData(0);
+            recordingChunks.push(new Float32Array(input));
+          };
+          listening = true; paused = false;
+          startBtn.classList.add("hidden"); liveActions.classList.remove("hidden"); status.classList.add("live"); statusText.textContent = "麦克风采集中"; waveHint.classList.add("hidden");
+          recordStatus.textContent = recordings.A || recordings.B ? "可以继续录制或重录片段" : "可以先录制片段 A";
+          updateRecordButtons();
+          animationId = requestAnimationFrame(draw);
+        } catch (error) {
+          const denied = error && (error.name === "NotAllowedError" || error.name === "SecurityError");
+          errorBox.textContent = denied ? "麦克风权限未开启。请在浏览器提示中选择“允许”，或在地址栏的权限设置中开启麦克风。" : "暂时无法读取麦克风，请检查设备连接后重试。";
+          errorBox.classList.add("show");
+        }
+      }
+
+      async function stop() {
+        cancelAnimationFrame(animationId);
+        cancelRecording();
+        if (recorderNode) recorderNode.onaudioprocess = null;
+        if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+        if (audioContext && audioContext.state !== "closed") await audioContext.close();
+        analyser = null; audioContext = null; mediaStream = null; sourceNode = null; recorderNode = null; silentGain = null; listening = false; paused = false; lastScopeData = null;
+        startBtn.classList.remove("hidden"); liveActions.classList.add("hidden"); status.classList.remove("live"); statusText.textContent = "麦克风待机"; waveHint.textContent = "点击“开始采集”，示波器将自动稳定波形"; waveHint.classList.remove("hidden"); pauseBtn.textContent = "Ⅱ 暂停";
+        recordStatus.textContent = recordings.A || recordings.B ? "记录已保留；重新采集后可继续录制" : "开始采集后即可录制";
+        updateRecordButtons();
+        $("dbValue").textContent = $("pitchValue").textContent = $("timbreValue").textContent = "—";
+        $("pitchUnit").textContent = "Hz"; $("dbNote").textContent = "采集后显示振幅大小"; $("pitchNote").textContent = "采集后显示振动频率"; $("timbreNote").textContent = "由采集频谱重心估计";
+        drawIdle();
+      }
+
+      startBtn.addEventListener("click", start);
+      stopBtn.addEventListener("click", stop);
+      recordButtons.A.addEventListener("click", () => startRecording("A"));
+      recordButtons.B.addEventListener("click", () => startRecording("B"));
+      clearRecords.addEventListener("click", clearRecordedSegments);
+      playTone.addEventListener("click", startGenerator);
+      stopTone.addEventListener("click", stopGenerator);
+      toneFrequency.addEventListener("input", () => setToneFrequency(toneFrequency.value));
+      toneFrequencyNumber.addEventListener("input", () => {
+        const value = Number(toneFrequencyNumber.value);
+        if (Number.isFinite(value) && value >= 50 && value <= 2000) { toneFrequency.value = String(Math.round(value)); updateGeneratorParameters(); }
+      });
+      toneFrequencyNumber.addEventListener("change", () => setToneFrequency(toneFrequencyNumber.value));
+      toneVolume.addEventListener("input", updateGeneratorParameters);
+      toneTimbre.addEventListener("change", updateGeneratorParameters);
+      document.querySelectorAll("[data-frequency]").forEach(button => button.addEventListener("click", () => setToneFrequency(button.dataset.frequency)));
+      pauseBtn.addEventListener("click", () => {
+        paused = !paused;
+        statusText.textContent = paused ? "画面已暂停" : "麦克风采集中";
+        pauseBtn.textContent = paused ? "▶ 继续" : "Ⅱ 暂停";
+        waveHint.classList.add("hidden");
+        if (paused) { scopeState.textContent = "CH1 · AUTO · HOLD"; scopeState.classList.remove("live"); }
+      });
+      gainInput.addEventListener("input", () => {
+        gainValue.textContent = Number(gainInput.value).toFixed(2) + "×";
+        if (listening && paused && lastScopeData) drawScopeTrace(lastScopeData);
+        drawRecorded("A");
+        drawRecorded("B");
+      });
+      timebaseInput.addEventListener("change", () => { updateScopeLabels(); if (listening && paused && lastScopeData) drawScopeTrace(lastScopeData); });
+      compareTimebase.addEventListener("change", updateCompareScope);
+      window.addEventListener("resize", () => { drawIdle(); if (listening && paused && lastScopeData) drawScopeTrace(lastScopeData); drawRecorded("A"); drawRecorded("B"); if (!synthPlaying) renderGenerator(); });
+      window.addEventListener("beforeunload", () => {
+        if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+        if (synthOscillator) synthOscillator.stop();
+        if (synthContext && synthContext.state !== "closed") synthContext.close();
+      });
+      drawIdle();
+      drawRecorded("A");
+      drawRecorded("B");
+      updateRecordButtons();
+      updateGeneratorParameters();
+      updateCompareScope();
+    })();
+  </script>
+</body>
+</html>
