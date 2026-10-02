@@ -171,5 +171,32 @@
     }
     return { components, wires: links.map(([from, to], i) => ({ id: `w${i + 1}`, from, to })) };
   }
-  globalThis.CircuitPhysics = { TYPES, terminals, terminalId, solveCircuit, createComponent, createExample, SOURCE_R, AMMETER_R };
+  function validateCircuit(raw) {
+    if (!raw || !Array.isArray(raw.components) || !Array.isArray(raw.wires) || raw.components.length > 60 || raw.wires.length > 180) throw new Error('电路文件格式或容量不正确');
+    const safeId = (id) => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,50}$/.test(id) && !['__proto__', 'constructor', 'prototype'].includes(id);
+    const ids = new Set(), finite = (v, lo, hi) => Number.isFinite(v) && v >= lo && v <= hi;
+    const components = raw.components.map((c) => {
+      if (!c || !Object.hasOwn(TYPES, c.type) || !safeId(c.id) || ids.has(c.id) || typeof c.label !== 'string' || !/^[a-zA-Z0-9_-]{1,24}$/.test(c.label) || !finite(c.x, 90, 870) || !finite(c.y, 90, 570) || ![0, 90, 180, 270].includes(c.rotation)) throw new Error('元件参数不正确');
+      ids.add(c.id);
+      const base = createComponent(c.type, c.id, c.x, c.y);
+      const next = Object.fromEntries(Object.keys(base).map((key) => [key, c[key]]));
+      if (c.type === 'switch' && typeof c.closed !== 'boolean') throw new Error('开关状态不正确');
+      return next;
+    });
+    const wires = raw.wires.map((w) => {
+      if (!w || !safeId(w.id) || ids.has(w.id) || typeof w.from !== 'string' || typeof w.to !== 'string' || w.from === w.to) throw new Error('导线参数不正确');
+      ids.add(w.id);
+      const next = { id: w.id, from: w.from, to: w.to };
+      const point = (p) => { if (!p || !finite(p.x, 10, 950) || !finite(p.y, 10, 640)) throw new Error('导线路径越界'); return { x: p.x, y: p.y }; };
+      for (const key of ['manual', 'waypoints']) if (w[key] !== undefined) {
+        if (!Array.isArray(w[key]) || w[key].length > 100 || key === 'manual' && w[key].length < 2) throw new Error('导线路径不正确');
+        next[key] = w[key].map(point);
+      }
+      if (w.via !== undefined) next.via = point(w.via);
+      return next;
+    });
+    solveCircuit(components, wires);
+    return { components, wires };
+  }
+  globalThis.CircuitPhysics = { TYPES, terminals, terminalId, solveCircuit, createComponent, createExample, validateCircuit, SOURCE_R, AMMETER_R };
 })();

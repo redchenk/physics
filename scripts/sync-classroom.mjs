@@ -19,7 +19,7 @@ export async function syncClassroom() {
   await mkdir(output, { recursive: true });
   // Classic scripts also work when the root HTML is opened with file://.
   // Ship the same circuit engine/editor to both classroom and legacy URLs.
-  for (const directory of ['electricity', 'mechanics', 'optics']) {
+  for (const directory of ['electricity', 'mechanics', 'optics', 'labs']) {
     await cp(resolve(root, directory), resolve(output, directory), { recursive: true });
     await cp(resolve(root, directory), resolve(root, 'public', directory), { recursive: true });
   }

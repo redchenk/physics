@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const { TYPES, terminals, solveCircuit, createComponent, createExample } = globalThis.CircuitPhysics;
+  const { TYPES, terminals, solveCircuit, createComponent, createExample, validateCircuit } = globalThis.CircuitPhysics;
   const root = document.getElementById('circuitBuilder');
   if (!root) return;
   let circuit = createExample('empty');
@@ -19,22 +19,41 @@
   root.innerHTML = `
     <div class="cb-heading"><div><h2>自由搭建电路</h2><p>添加元件 → 点击两个接线柱接线 → 闭合开关 → 读取电表</p></div><span class="cb-live" id="cbStatus" role="status"></span></div>
     <div class="cb-layout">
-      <aside class="cb-sidebar"><h3>元件盒 <small>点击添加，可重复使用</small></h3><div class="cb-palette">${Object.entries(TYPES).map(([type, t]) => `<button type="button" data-add="${type}" aria-label="添加${t.name}"><b>${t.symbol}</b><span>${t.name}</span><i>＋</i></button>`).join('')}</div>
-        <section class="cb-inspector" id="cbInspector" aria-label="选中对象的属性"></section>
+      <aside class="cb-sidebar"><details class="lab-palette-panel" id="cbPalette" open><summary class="lab-palette-summary">添加电路元件</summary><h3>元件盒 <small>点击添加，可重复使用</small></h3><div class="cb-palette">${Object.entries(TYPES).map(([type, t]) => `<button type="button" data-add="${type}" aria-label="添加${t.name}"><b>${t.symbol}</b><span>${t.name}</span><i>＋</i></button>`).join('')}</div></details>
         <details class="cb-help"><summary>接线与操作说明</summary><p>点击两个接线柱即可接线。接线途中点击空白处可指定拐点，Backspace 退回一个拐点，Esc 取消。同一接线柱可接多根线，也可用分线点分支。</p><p>实心圆点表示分支相通，跨线桥表示交叉不相通。点击导线会高亮两端，拖动线段上的握柄调整走向；方向键也可调整。</p><p>拖动元件主体移动，方向键微调。Delete 删除选中对象，误操作可撤销。“整理自动导线”保留手动调整的线路。</p><p>电流表串入被测支路，电压表跨接在被测元件两端。红色为正接线柱，深色为负接线柱；负读数表示反向偏转。</p><p>滑动变阻器：接 A 与滑片 W，或 B 与 W 调阻；只接 A、B 时始终使用全部电阻。</p></details>
       </aside>
+      <section class="cb-inspector cb-sidebar" id="cbInspector" aria-label="选中对象的属性"></section>
       <div class="cb-workspace">
         <div class="cb-toolbar"><label for="cbExample">起始电路</label><select id="cbExample"><option value="empty">空白实验台</option><option value="lamp">点亮小灯泡</option><option value="ohm">伏安法测电阻</option><option value="series">两个电阻串联</option><option value="parallel">两个电阻并联</option></select><button type="button" id="cbLoad">载入</button><span class="cb-toolbar-spacer"></span><button type="button" id="cbUndo" disabled>撤销</button><button type="button" id="cbRedo" disabled>重做</button><button type="button" id="cbClear">清空实验台</button></div>
         <div class="cb-wiring-tools"><label for="cbWireStyle">导线外观</label><select id="cbWireStyle"><option value="schematic">教材电路图</option><option value="smooth">圆滑导线</option></select><button type="button" id="cbArrangeWires">整理自动导线</button><span>点击接线柱接线 · 空白处可指定拐点</span></div>
+        <div class="lab-view-tools" id="cbViewTools"><button type="button" data-lab-zoom="fit" aria-pressed="true">适应窗口</button><button type="button" data-lab-zoom="out" aria-label="缩小电路图">−</button><output id="cbZoom">100%</output><button type="button" data-lab-zoom="in" aria-label="放大电路图">＋</button><button type="button" data-lab-zoom="actual">原始大小</button><select id="cbObjects" aria-label="选择元件或导线"></select><button type="button" id="cbProperties">查看属性</button><span class="lab-save-status" id="cbSaveStatus" role="status">自动保存准备中</span></div>
         <p class="cb-message" id="cbMessage" aria-live="polite">先从左侧添加电源、开关和负载，或载入一个示例后改接。</p>
-        <div class="cb-scroll" tabindex="0" aria-label="可横向滚动的电路实验台"><div class="cb-board" id="cbBoard" aria-label="电路搭建区域"><svg id="cbWires" viewBox="0 0 960 650" aria-label="已连接的导线"></svg><div id="cbParts"></div><svg id="cbOverlay" viewBox="0 0 960 650" aria-label="导线编辑与接线预览"></svg><div class="cb-empty" id="cbEmpty"><b>从一根导线开始</b><p>元件可以自由组合。接线柱间的连接决定电路。</p><span>＋ 添加元件，或选择上方示例</span></div></div></div>
+        <div class="cb-scroll" id="cbScroll" tabindex="0" aria-label="可缩放和横向滚动的电路实验台"><div class="lab-stage" id="cbStage"><div class="cb-board" id="cbBoard" aria-label="电路搭建区域"><svg id="cbWires" viewBox="0 0 960 650" aria-label="已连接的导线"></svg><div id="cbParts"></div><svg id="cbOverlay" viewBox="0 0 960 650" aria-label="导线编辑与接线预览"></svg><div class="cb-empty" id="cbEmpty"><b>从一根导线开始</b><p>元件可以自由组合。接线柱间的连接决定电路。</p><span>＋ 添加元件，或选择上方示例</span></div></div></div></div>
         <p class="cb-wire-legend"><span><b>●</b> 实心点：分支相通</span><span><b>⌒</b> 跨线桥：交叉不相通</span><span><b>↕</b> 选中导线：拖动整段调整</span></p><div class="cb-feedback" id="cbFeedback" aria-live="polite"></div>
         <section class="cb-meters"><div class="cb-section-heading"><h3>电表读数</h3><button type="button" id="cbRecord">＋ 记录本次读数</button></div><div class="cb-readings" id="cbReadings"></div></section>
       </div>
     </div>
-    <section class="cb-records"><div class="cb-section-heading"><h3>实验记录 <small id="cbRecordCount">0 组</small></h3><button type="button" id="cbExport" disabled>导出 CSV</button></div><div class="cb-table-scroll"><table><thead><tr><th>组次</th><th>电路与参数</th><th>电表读数</th><th>状态</th></tr></thead><tbody id="cbRecordBody"><tr><td colspan="4">接好电路后，主动记录一组读数，再改变接法或参数进行比较。</td></tr></tbody></table></div></section>
-    <p class="cb-model">直流稳态教学模型：导线和闭合开关理想，电源内阻 0.1 Ω，电流表内阻 0.01 Ω，电压表内阻无限大；灯泡按所设定值电阻计算，亮度随功率变化。记录仅保留在当前页面，可导出保存。</p>`;
+    <section class="cb-records"><div class="cb-section-heading"><h3>实验记录 <small id="cbRecordCount">0 组</small></h3><button type="button" id="cbSave">保存电路与记录</button><button type="button" id="cbImport">载入备份</button><input type="file" id="cbFile" accept=".json,application/json" hidden aria-label="载入电路备份"><button type="button" id="cbExport" disabled>导出 CSV</button></div><div class="cb-table-scroll"><table><thead><tr><th>组次</th><th>电路与参数</th><th>电表读数</th><th>状态</th></tr></thead><tbody id="cbRecordBody"><tr><td colspan="4">接好电路后，主动记录一组读数，再改变接法或参数进行比较。</td></tr></tbody></table></div></section>
+    <p class="cb-model">直流稳态教学模型：导线和闭合开关理想，电源内阻 0.1 Ω，电流表内阻 0.01 Ω，电压表内阻无限大；灯泡按所设定值电阻计算，亮度随功率变化。电路与读数自动保存在此浏览器；可导出完整 JSON 备份并恢复，记录也可导出 CSV。</p>`;
 
+  function validateWorkspace(raw) {
+    if (!raw || raw.version !== 1 || !Array.isArray(raw.records) || raw.records.length > 100) throw new Error('实验备份格式不正确');
+    const next = { version: 1, circuit: validateCircuit(raw.circuit), records: [] };
+    next.records = raw.records.map((row) => {
+      if (!row || ['parameters', 'meters', 'status', 'time'].some((key) => typeof row[key] !== 'string' || row[key].length > 100000)) throw new Error('记录格式不正确');
+      const snapshot = validateCircuit(row.circuit);
+      return { circuit: snapshot, readings: solveCircuit(snapshot.components, snapshot.wires), ...Object.fromEntries(['parameters', 'meters', 'status', 'time'].map((key) => [key, row[key]])) };
+    });
+    return next;
+  }
+  const store = globalThis.LabWorkspace?.createStore('gewuphysics.classroom.circuit.v1', validateWorkspace, (message) => { $('cbSaveStatus').textContent = message; });
+  const workspace = () => ({ version: 1, circuit, records });
+  function persist() { store?.save(workspace()); }
+  function nextId(prefix) { let id; do { id = `${prefix}${sequence++}`; } while (circuit.components.some((c) => c.id === id) || circuit.wires.some((w) => w.id === id)); return id; }
+  function renderRecords() {
+    $('cbRecordBody').innerHTML = records.length ? records.map((r, i) => `<tr><td>${i + 1}</td><td>${escape(r.parameters)}</td><td>${escape(r.meters)}</td><td>${escape(r.status)}</td></tr>`).join('') : '<tr><td colspan="4">接好电路后记录一组读数，再改变接法或参数比较。</td></tr>';
+    $('cbRecordCount').textContent = `${records.length} 组`; $('cbExport').disabled = !records.length;
+  }
   function remember(snapshot = circuit, savedRoutes = routeCache) { undo.push({ circuit: clone(snapshot), routes: clone(savedRoutes) }); if (undo.length > 60) undo.shift(); redo.length = 0; }
   function announce(message) { $('cbMessage').textContent = message; }
   function selectedPart() { return circuit.components.find((c) => c.id === selected); }
@@ -122,6 +141,7 @@
       <div class="cb-rotor" style="transform:rotate(${c.rotation}deg)"><button type="button" class="cb-body" data-select="${c.id}" aria-label="选择 ${c.label} ${TYPES[c.type].name}，方向键移动">${symbol(c)}</button>${terminals(c).map((port) => { const p = localPort(c, port), key = `${c.id}:${port}`; return `<button type="button" class="cb-terminal ${port === 'a' && ['battery', 'ammeter', 'voltmeter'].includes(c.type) ? 'positive' : ''} ${pending === key ? 'is-pending' : ''}" style="left:${65 + p.x}px;top:${28 + p.y}px" data-terminal="${key}" aria-label="接线柱 ${terminalName(key)}" title="${terminalName(key)}"><span style="transform:rotate(${-c.rotation}deg)">${c.type === 'rheostat' ? port.toUpperCase() : ['battery', 'ammeter', 'voltmeter'].includes(c.type) ? port === 'a' ? '+' : '−' : '•'}</span></button>`; }).join('')}</div>
       <span class="cb-part-value ${result.readings[c.id]?.overload ? 'cb-overload' : ''}">${description(c)}</span></div>`).join('');
     $('cbEmpty').hidden = circuit.components.length > 0;
+    $('cbObjects').innerHTML = '<option value="">选择元件或导线…</option>' + circuit.components.map((c) => `<option value="${c.id}" ${c.id === selected ? 'selected' : ''}>${c.label} ${TYPES[c.type].name}</option>`).join('') + circuit.wires.map((w, i) => `<option value="${w.id}" ${w.id === selected ? 'selected' : ''}>导线 ${i + 1}：${terminalName(w.from)} → ${terminalName(w.to)}</option>`).join('');
     renderWires();
     if (focusKey) $('cbParts').querySelector(`[data-${focusAttribute}="${focusKey}"]`)?.focus({ preventScroll: true });
   }
@@ -160,6 +180,7 @@
     result = solveCircuit(circuit.components, circuit.wires);
     renderParts(); if (inspector) renderInspector(); renderReadings();
     $('cbUndo').disabled = !undo.length; $('cbRedo').disabled = !redo.length;
+    if (!drag && !parameterEdit) persist();
   }
   function cancelConnection() { pending = null; pins = []; previewPoint = null; }
   function resetRoutes() { routeCache = []; routeSignature = ''; }
@@ -169,7 +190,7 @@
     if (pending === key) { cancelConnection(); announce('已取消接线。'); renderParts(); return; }
     if (circuit.wires.some((w) => (w.from === pending && w.to === key) || (w.to === pending && w.from === key))) { announce('这两个接线柱已有导线，无需重复连接。'); cancelConnection(); renderParts(); return; }
     if (circuit.wires.length >= 180) { announce('最多放置 180 根导线，请先删除不需要的导线。'); return; }
-    const next = { id: `wire${sequence++}`, from: pending, to: key, ...(pins.length ? { waypoints: clone(pins) } : {}) };
+    const next = { id: nextId('wire'), from: pending, to: key, ...(pins.length ? { waypoints: clone(pins) } : {}) };
     const trial = router.routeWires(circuit.components, [...circuit.wires, next], { previous: routeCache });
     if (trial.some((r) => r.failed && !routes.find((old) => old.id === r.id)?.failed) || router.scene(trial).conflicts.length) { announce('这条路径被挡住了。请移开元件，或按 Backspace 撤回拐点后重新选择。'); return; }
     remember(); circuit.wires.push(next);
@@ -193,7 +214,7 @@
       remember(); const type = add.dataset.add;
       const ordinal = Math.max(0, ...circuit.components.filter((c) => c.type === type).map((c) => Number(c.label.replace(/\D/g, '')))) + 1;
       const { x, y } = globalThis.WireRouter.findPlacement(circuit.components, circuit.wires, type);
-      const c = createComponent(type, `part${sequence++}`, x, y, ordinal); circuit.components.push(c); selected = c.id; cancelConnection(); render(); announce(`已添加 ${c.label} ${TYPES[type].name}。拖动调整位置，点击接线柱连线。`); return;
+      const c = createComponent(type, nextId('part'), x, y, ordinal); circuit.components.push(c); selected = c.id; cancelConnection(); render(); announce(`已添加 ${c.label} ${TYPES[type].name}。拖动调整位置，点击接线柱连线。`); return;
     }
     const terminal = event.target.closest('[data-terminal]');
     if (terminal) { connect(terminal.dataset.terminal); return; }
@@ -213,22 +234,26 @@
     const c = selectedPart();
     if (c && (action === 'rotate' || action === 'toggle')) { remember(); if (action === 'rotate') c.rotation = (c.rotation + 90) % 360; else c.closed = !c.closed; render(); }
   });
-  root.addEventListener('change', (event) => {
+  function commitProperty(event) {
     const key = event.target.dataset.property, c = selectedPart();
     if (!key || !c) return;
     const value = Number(event.target.value);
-    if (!event.target.checkValidity() || event.target.value === '' || !Number.isFinite(value)) { announce('请输入标注范围内的有效数值。'); renderInspector(); return; }
+    if (!event.target.checkValidity() || event.target.value === '' || !Number.isFinite(value)) { if (parameterEdit) circuit = parameterEdit.snapshot; parameterEdit = null; announce('请输入标注范围内的有效数值。'); render(); return; }
+    if (!parameterEdit && c[key] === (key === 'position' ? value / 100 : value)) return;
     remember(parameterEdit?.id === c.id ? parameterEdit.snapshot : circuit); parameterEdit = null;
     c[key] = key === 'position' ? value / 100 : value;
-    render(false); if (key === 'position') $('cbPositionOut').textContent = `${value}%`;
+    render(false); persist(); if (key === 'position') $('cbPositionOut').textContent = `${value}%`;
     announce(`${c.label} 参数已更新，电表按当前接线重新计算。`);
-  });
+  }
+  root.addEventListener('change', commitProperty);
+  root.addEventListener('focusout', (event) => { if (parameterEdit && event.target.dataset.property) commitProperty(event); });
   root.addEventListener('input', (event) => {
     const c = selectedPart();
-    if (event.target.id !== 'cbPosition' || !c) return;
+    const key = event.target.dataset.property;
+    if (!key || !c || event.target.value === '' || !event.target.checkValidity()) return;
     parameterEdit ??= { id: c.id, snapshot: clone(circuit) };
-    c.position = Number(event.target.value) / 100;
-    $('cbPositionOut').textContent = `${event.target.value}%`;
+    c[key] = Number(event.target.value) / (key === 'position' ? 100 : 1);
+    if (key === 'position') $('cbPositionOut').textContent = `${event.target.value}%`;
     render(false);
   });
   const board = $('cbBoard');
@@ -236,6 +261,7 @@
   const boardPoint = (event) => { const rect = board.getBoundingClientRect(); return { x: Math.max(10, Math.min(950, Math.round((event.clientX - rect.left) * 960 / rect.width / 10) * 10)), y: Math.max(10, Math.min(640, Math.round((event.clientY - rect.top) * 650 / rect.height / 10) * 10)) }; };
   function invalidEdit(before) { return routes.some((r) => r.failed && !before.find((p) => p.id === r.id)?.failed) || wireScene.conflicts.length > router.scene(before).conflicts.length; }
   board.addEventListener('pointerdown', (event) => {
+    if (drag || event.button !== 0) return;
     const handle = event.target.closest('[data-route-handle]');
     if (handle && event.button === 0) {
       event.preventDefault(); selected = handle.dataset.routeHandle; const route = routes.find((r) => r.id === selected);
@@ -258,10 +284,11 @@
     lastPointer = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY };
     if (!dragFrame) dragFrame = requestAnimationFrame(() => { dragFrame = 0; if (drag && lastPointer) updateDrag(lastPointer); });
   });
-  function updateDrag(event) {
-    const dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
+  function updateDrag(event, capture = true) {
+    const rect = board.getBoundingClientRect();
+    const dx = (event.clientX - drag.startX) * 960 / rect.width, dy = (event.clientY - drag.startY) * 650 / rect.height;
     if (!drag.moved && Math.hypot(dx, dy) < 4) return;
-    if (!drag.moved) board.setPointerCapture(event.pointerId);
+    if (!drag.moved && capture) board.setPointerCapture(event.pointerId);
     drag.moved = true;
     if (drag.kind === 'wire') {
       const wire = circuit.wires.find((w) => w.id === drag.id); wire.manual = router.moveSegment(drag.points, drag.index, drag.horizontal ? dy : dx); delete wire.via; delete wire.waypoints;
@@ -274,20 +301,30 @@
   function finishDrag(event) {
     if (!drag || event.pointerId !== drag.pointer) return;
     if (dragFrame) { cancelAnimationFrame(dragFrame); dragFrame = 0; }
-    if (lastPointer) updateDrag(lastPointer);
-    const moved = drag.moved, rejected = event.type === 'pointercancel' || drag.kind === 'wire' && invalidEdit(drag.routes);
-    if (moved && rejected) { circuit = drag.snapshot; routeCache = drag.routes; routeSignature = ''; announce('该位置会穿过元件或重叠其他导线，已恢复原走向。请向另一侧调整。'); }
+    if (event.type === 'pointerup') updateDrag(event, false);
+    const moved = drag.moved, rejected = event.type !== 'pointerup' || drag.kind === 'wire' && invalidEdit(drag.routes);
+    if (moved && rejected) { circuit = drag.snapshot; routeCache = drag.routes; routeSignature = ''; announce(event.type === 'pointerup' ? '该位置会穿过元件或重叠其他导线，已恢复原走向。请向另一侧调整。' : '拖动已取消，装置恢复原位置。'); }
     else if (moved) { remember(drag.snapshot, drag.routes); announce(drag.kind === 'wire' ? '已调整整段导线，接线关系不变。可撤销，或恢复自动布线。' : '元件已对齐网格，相关导线已更新。'); }
-    if (board.hasPointerCapture(event.pointerId)) board.releasePointerCapture(event.pointerId);
-    drag = null; lastPointer = null; board.classList.remove('has-invalid-route');
+    drag = null;
+    if (board.hasPointerCapture(event.pointerId)) board.releasePointerCapture(event.pointerId); lastPointer = null; board.classList.remove('has-invalid-route');
     if (moved) { suppressClick = true; setTimeout(() => { suppressClick = false; }, 0); render(); }
   }
   board.addEventListener('pointerup', finishDrag);
   board.addEventListener('pointercancel', finishDrag);
+  board.addEventListener('lostpointercapture', finishDrag);
+  window.addEventListener('pointerup', finishDrag);
+  function cancelDrag() {
+    if (!drag) return; const old = drag; drag = null;
+    if (dragFrame) cancelAnimationFrame(dragFrame); dragFrame = 0; lastPointer = null;
+    circuit = old.snapshot; routeCache = old.routes; routeSignature = '';
+    if (board.hasPointerCapture(old.pointer)) board.releasePointerCapture(old.pointer);
+    board.classList.remove('has-invalid-route');
+  }
   board.addEventListener('dblclick', (event) => { const c = circuit.components.find((item) => item.id === event.target.closest('[data-select]')?.dataset.select); if (c?.type === 'switch') { remember(); c.closed = !c.closed; render(); } });
   root.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') { cancelConnection(); renderParts(); announce('已取消接线。'); return; }
+    if (event.key === 'Escape') { cancelDrag(); cancelConnection(); render(); announce('已取消接线或拖动，装置恢复。'); return; }
     if (event.target.matches('input,select,textarea')) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); $(event.shiftKey ? 'cbRedo' : 'cbUndo').click(); return; }
     if (event.key === 'Backspace' && pending) { event.preventDefault(); pins.pop(); renderOverlay(); announce(`剩余 ${pins.length} 个拐点，点击接线柱完成接线。`); return; }
     if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); removeSelected(); return; }
     const wire = event.target.closest('[data-wire]');
@@ -306,10 +343,10 @@
     const c = circuit.components.find((item) => item.id === event.target.closest('[data-select]')?.dataset.select);
     if (c && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) { event.preventDefault(); remember(); selected = c.id; c.x += event.key === 'ArrowLeft' ? -10 : event.key === 'ArrowRight' ? 10 : 0; c.y += event.key === 'ArrowUp' ? -10 : event.key === 'ArrowDown' ? 10 : 0; clampPosition(c); render(); board.querySelector(`[data-select="${c.id}"]`).focus({ preventScroll: true }); }
   });
-  function replaceCircuit(next) { remember(); circuit = next; selected = null; cancelConnection(); resetRoutes(); netColors.clear(); render(); announce('实验台已更新。所有元件和导线均可自由修改；可撤销恢复原电路。'); }
+  function replaceCircuit(next) { cancelDrag(); remember(); circuit = next; selected = null; cancelConnection(); resetRoutes(); netColors.clear(); render(); announce('实验台已更新。所有元件和导线均可自由修改；可撤销恢复原电路。'); }
   $('cbLoad').addEventListener('click', () => replaceCircuit(createExample($('cbExample').value)));
   $('cbClear').addEventListener('click', () => replaceCircuit(createExample('empty')));
-  for (const [id, from, to] of [['cbUndo', undo, redo], ['cbRedo', redo, undo]]) $(id).addEventListener('click', () => { if (!from.length) return; to.push({ circuit: clone(circuit), routes: clone(routes) }); const previous = from.pop(); circuit = previous.circuit; routeCache = previous.routes; routeSignature = ''; selected = null; cancelConnection(); render(); announce(id === 'cbUndo' ? '已撤销，接线和走向均已恢复。' : '已重做。'); });
+  for (const [id, from, to] of [['cbUndo', undo, redo], ['cbRedo', redo, undo]]) $(id).addEventListener('click', () => { cancelDrag(); if (!from.length) return; const previous = from.pop(); to.push({ circuit: clone(circuit), routes: clone(routes), ...(previous.records ? { records: clone(records) } : {}) }); circuit = previous.circuit; routeCache = previous.routes; if (previous.records) { records.splice(0, records.length, ...previous.records); renderRecords(); } routeSignature = ''; selected = null; cancelConnection(); render(); announce(id === 'cbUndo' ? '已撤销，接线和走向均已恢复。' : '已重做。'); });
   $('cbWireStyle').addEventListener('change', (event) => { wireStyle = event.target.value; renderWires(); announce(`已切换为${wireStyle === 'smooth' ? '圆滑导线' : '教材电路图'}，接线关系不变。`); });
   $('cbArrangeWires').addEventListener('click', () => { remember(); renderWires(true); renderReadings(); $('cbUndo').disabled = false; $('cbRedo').disabled = true; announce('已重新整理自动导线，手动调整的线路已保留。'); });
   $('cbRecord').addEventListener('click', () => {
@@ -321,7 +358,7 @@
       meters: circuit.components.filter((c) => TYPES[c.type].range).map((c) => `${c.label}: ${description(c)}（量程 ${c.range}）`).join('；'),
       status: result.warnings.length ? result.warnings.join('；') : result.status === 'closed' ? '通路' : '断路 / 无电流',
     };
-    records.push(row); $('cbRecordBody').innerHTML = records.map((r, i) => `<tr><td>${i + 1}</td><td>${escape(r.parameters)}</td><td>${escape(r.meters)}</td><td>${escape(r.status)}</td></tr>`).join(''); $('cbRecordCount').textContent = `${records.length} 组`; $('cbExport').disabled = false; announce(`已记录第 ${records.length} 组，后续改接不会改变已有记录。`);
+    records.push(row); renderRecords(); persist(); announce(`已记录第 ${records.length} 组，后续改接不会改变已有记录。`);
   });
   $('cbExport').addEventListener('click', () => {
     const cell = (v) => `"${String(v).replace(/"/g, '""')}"`;
@@ -332,5 +369,26 @@
   function showBuilder() { root.hidden = false; fixed.hidden = true; builderTab.classList.add('active'); builderTab.setAttribute('aria-pressed', 'true'); document.querySelectorAll('.tab[data-mode]').forEach((tab) => { tab.classList.remove('active'); tab.setAttribute('aria-pressed', 'false'); }); $('formula').textContent = '自主接线 · 实时测量'; }
   builderTab.addEventListener('click', showBuilder);
   document.querySelectorAll('.tab[data-mode]').forEach((tab) => tab.addEventListener('click', () => { root.hidden = true; fixed.hidden = false; builderTab.classList.remove('active'); builderTab.setAttribute('aria-pressed', 'false'); document.querySelectorAll('.tab[data-mode]').forEach((button) => { button.classList.toggle('active', button === tab); button.setAttribute('aria-pressed', String(button === tab)); }); window.dispatchEvent(new Event('resize')); }));
-  render(); showBuilder();
+  $('cbObjects').addEventListener('change', (event) => { cancelDrag(); cancelConnection(); selected = event.target.value || null; render(); });
+  $('cbProperties').addEventListener('click', () => { $('cbInspector').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); $('cbInspector').querySelector('input,select,button')?.focus({ preventScroll: true }); });
+  $('cbSave').addEventListener('click', () => globalThis.LabWorkspace?.download('电路实验备份.json', JSON.stringify(workspace(), null, 2)));
+  $('cbImport').addEventListener('click', () => $('cbFile').click());
+  $('cbFile').addEventListener('change', async (event) => {
+    const file = event.target.files[0]; if (!file) return;
+    try {
+      if (file.size > 5000000) throw new Error('文件过大，最多 5 MB');
+      const raw = JSON.parse(await file.text());
+      const next = validateWorkspace(raw.version === 1 && raw.circuit ? raw : { version: 1, circuit: raw, records: [] });
+      cancelDrag(); remember(); undo.at(-1).records = clone(records); circuit = next.circuit; records.splice(0, records.length, ...next.records);
+      selected = null; cancelConnection(); resetRoutes(); renderRecords(); render(); announce('已恢复电路与记录；导入前的电路和记录可撤销恢复。');
+    } catch (error) { announce(`载入失败：${error.message}。原实验保留。`); }
+    finally { event.target.value = ''; }
+  });
+  const restored = store?.load(); if (restored) { circuit = restored.circuit; records.push(...restored.records); }
+  globalThis.LabWorkspace?.viewport({ board, stage: $('cbStage'), scroll: $('cbScroll'), width: 960, height: 650, controls: $('cbViewTools'), output: $('cbZoom') });
+  if (window.matchMedia?.('(max-width:760px)').matches) $('cbPalette').open = false;
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelDrag(); cancelConnection(); render(); } });
+  window.addEventListener('message', (event) => { if (event.source === window.parent && event.origin === location.origin && event.data?.type === 'gewulab:active' && event.data.active === false) { cancelDrag(); cancelConnection(); render(); } });
+  document.querySelectorAll('.tab[data-mode]').forEach((tab) => tab.addEventListener('click', () => { cancelDrag(); cancelConnection(); render(); }));
+  renderRecords(); render(); showBuilder();
 })();

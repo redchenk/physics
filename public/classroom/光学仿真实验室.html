@@ -21,7 +21,7 @@
     .lab-grid{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px}.card{border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 8px 25px rgba(22,35,31,.045)}
     .controls{grid-row:span 2;padding:20px}.panel-kicker{margin:0 0 3px;color:#4e7a6e;font-size:9px;font-weight:760;letter-spacing:.12em}.controls h2,.stage-head h2,.inquiry h2{margin:0;font-size:17px;letter-spacing:-.025em}.control-set{display:none;margin-top:20px}.control-set.active{display:grid;gap:18px}.field{display:grid;gap:7px}.field-line{display:flex;align-items:center;justify-content:space-between;gap:12px}.field label{color:#52615a;font-size:11px;font-weight:680}.field output{color:#1e5c4d;font:700 12px Consolas,monospace}.field input[type=range]{width:100%;accent-color:#337e6c}.field select{width:100%;height:38px;padding:0 10px;border:1px solid #ccd0c9;border-radius:9px;color:#2f4039;background:#fff}.choice{display:grid;grid-template-columns:1fr 1fr;gap:6px}.choice button{height:37px;border:1px solid #ccd0c9;border-radius:9px;color:#55635c;background:#fafaf6;font-size:11px}.choice button.active{border-color:#337e6c;color:#245e50;background:#e8f4ef;font-weight:700}
     .hint-box{margin-top:21px;padding:13px 14px;border-left:3px solid var(--yellow);border-radius:3px 9px 9px 3px;background:#f8f0de}.hint-box strong{color:#775d20;font-size:10px}.hint-box p{margin:4px 0 0;color:#725f38;font-size:10px;line-height:1.55}
-    .stage{min-width:0;overflow:hidden}.stage-head{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px;border-bottom:1px solid var(--line)}.stage-help{color:#748079;font-size:10px}.stage-help b{color:#397865}.canvas-wrap{position:relative;height:440px;background:#101b2a;touch-action:none}.canvas-wrap canvas{display:block;width:100%;height:100%;cursor:crosshair}.canvas-badge{position:absolute;left:13px;top:12px;padding:6px 8px;border:1px solid rgba(183,217,225,.2);border-radius:7px;color:rgba(220,239,242,.72);background:rgba(10,21,35,.75);font:9px Consolas,monospace;pointer-events:none}
+    .stage{min-width:0;overflow:hidden}.stage-head{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px;border-bottom:1px solid var(--line)}.stage-help{color:#748079;font-size:10px}.stage-help b{color:#397865}.canvas-wrap{position:relative;height:440px;background:#101b2a;touch-action:pan-y}.canvas-wrap canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}.canvas-badge{position:absolute;left:13px;top:12px;padding:6px 8px;border:1px solid rgba(183,217,225,.2);border-radius:7px;color:rgba(220,239,242,.72);background:rgba(10,21,35,.75);font:9px Consolas,monospace;pointer-events:none}
     .metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #263747;background:#142435}.metric{min-width:0;padding:14px 15px}.metric+.metric{border-left:1px solid #2c3d4c}.metric span{display:block;margin-bottom:5px;color:#8199a3;font-size:9px}.metric strong{display:block;overflow:hidden;color:#f0f7f5;font:700 18px Consolas,"Microsoft YaHei",monospace;text-overflow:ellipsis;white-space:nowrap}.metric small{display:block;margin-top:3px;color:#8fa5ad;font-size:8px}
     .inquiry{grid-column:2;padding:19px}.inquiry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.task{max-width:720px}.task p{margin:6px 0 0;color:#6d7872;font-size:11px;line-height:1.6}.record-actions{display:flex;gap:7px}.button{min-height:36px;padding:0 13px;border:1px solid transparent;border-radius:9px;font-size:11px;font-weight:680}.button-primary{color:#f5fff9;background:#1f5d4f}.button-primary:hover{background:#2b7563}.button-outline{border-color:#cfd2cb;color:#5d6862;background:#fff}.record-note{min-height:18px;margin:8px 0 0;color:#397765;font-size:10px}
     .conclusion{margin:14px 0;padding:12px 14px;border:1px solid #d8ddd7;border-radius:10px;color:#3f514a;background:#f5f7f2;font-size:11px;line-height:1.65}.conclusion strong{color:#215d4e}
@@ -32,6 +32,8 @@
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
   <link rel="stylesheet" href="optics/bench.css?v=20260906-optics1">
+  <link rel="stylesheet" href="labs/workspace.css">
+  <script src="labs/workspace.js"></script>
   <link rel="stylesheet" href="classroom.css">
   <script id="classroom-bridge" data-module="optics" src="classroom-bridge.js" defer></script>
 </head>
@@ -103,7 +105,7 @@
     </section>
 
     <section id="opticsBench" hidden aria-label="可自由组合的光学实验台"></section>
-    <footer><p>采用几何光学与薄透镜近轴模型；可在自由探索台查看操作说明和模型范围。</p><p>实验数据留在本机；刷新前可导出装置与探索记录。</p></footer>
+    <footer><p>采用几何光学与薄透镜近轴模型；可在自由探索台查看操作说明和模型范围。</p><p>自由探索装置与记录自动保存在此浏览器；专题记录刷新前请导出。</p></footer>
   </main>
 
   <script>
@@ -115,7 +117,7 @@
       const mediaNames={"1":"空气","1.33":"水","1.49":"亚克力","1.5":"玻璃","2.42":"钻石"};
       const state={mode:"reflection",reflectionAngle:35,refractionAngle:45,n1:1,n2:1.5,lensType:"convex",focalLength:12,objectDistance:30};
       const records={reflection:[],refraction:[],lens:[]};
-      let dragging=false;
+      let dragging=null;
       let geometry=null;
 
       function fit(){
@@ -160,7 +162,7 @@
       function drawReflection(w,h){
         background(w,h);
         const cx=w*.56,cy=h*.64,len=Math.min(w*.42,h*.52),a=state.reflectionAngle*Math.PI/180;
-        geometry={cx,cy,type:"angle"};
+        geometry={cx,cy,len,type:"angle"};
         line(45,cy,w-45,cy,"#9fb6c0",4);line(cx,cy-h*.5,cx,cy+45,"rgba(194,216,224,.48)",1,true);
         for(let x=55;x<w-45;x+=22)line(x,cy+3,x-9,cy+12,"rgba(159,182,192,.35)",1);
         const sx=cx-Math.sin(a)*len,sy=cy-Math.cos(a)*len,ex=cx+Math.sin(a)*len,ey=cy-Math.cos(a)*len;
@@ -182,7 +184,7 @@
       function drawRefraction(w,h){
         background(w,h);
         const cx=w*.53,cy=h*.51,len=Math.min(w*.4,h*.42),a=state.refractionAngle*Math.PI/180,result=refractionResult();
-        geometry={cx,cy,type:"angle"};
+        geometry={cx,cy,len,type:"angle"};
         ctx.fillStyle="rgba(71,114,140,.13)";ctx.fillRect(0,0,w,cy);ctx.fillStyle="rgba(39,120,111,.12)";ctx.fillRect(0,cy,w,h-cy);
         line(30,cy,w-30,cy,"#a6bbc3",2);line(cx,25,cx,h-25,"rgba(194,216,224,.42)",1,true);
         const sx=cx-Math.sin(a)*len,sy=cy-Math.cos(a)*len;arrow(sx,sy,cx,cy,"#ffd166",3);ctx.fillStyle="#ffd166";ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.fill();
@@ -220,7 +222,7 @@
         background(w,h);
         const axis=h*.53,lensX=w*.57,scale=Math.min(8,(lensX-48)/50),absF=state.focalLength*scale,u=state.objectDistance*scale,result=lensResult();
         const objectX=lensX-u,objectHeight=Math.min(82,h*.24),topY=axis-objectHeight;
-        geometry={lensX,axis,scale,type:"object"};
+        geometry={lensX,axis,scale,objectX,topY,type:"object"};
         line(25,axis,w-25,axis,"rgba(179,204,214,.48)",1);
         const lensTop=48,lensBottom=h-46;
         ctx.save();ctx.fillStyle="rgba(104,217,232,.16)";ctx.strokeStyle="#73d6e4";ctx.lineWidth=2.5;ctx.beginPath();
@@ -292,7 +294,7 @@
       function switchMode(mode){
         const extended=["bench","mirror-image","dispersion"].includes(mode);
         document.querySelectorAll(".tab").forEach(el=>{el.classList.toggle("active",el.dataset.mode===mode);el.setAttribute("aria-pressed",String(el.dataset.mode===mode))});
-        document.querySelector(".lab-grid").hidden=extended;$("opticsBench").hidden=!extended;dragging=false;
+        document.querySelector(".lab-grid").hidden=extended;$("opticsBench").hidden=!extended;cancelPointer();
         window.dispatchEvent(new CustomEvent("optics:mode",{detail:mode}));
         if(extended){$("formulaChip").textContent=mode==="mirror-image"?"物与像关于镜面对称":mode==="dispersion"?"n 随波长变化":"移动 · 旋转 · 组合";return}
         state.mode=mode;document.querySelectorAll(".control-set").forEach(el=>el.classList.toggle("active",el.dataset.controls===mode));
@@ -337,23 +339,43 @@
       $("recordData").addEventListener("click",recordData);$("clearData").addEventListener("click",clearData);
 
       function pointerPosition(event){const rect=canvas.getBoundingClientRect();return{x:event.clientX-rect.left,y:event.clientY-rect.top}}
-      canvas.addEventListener("pointerdown",event=>{dragging=true;canvas.setPointerCapture(event.pointerId);handleDrag(event)});
-      canvas.addEventListener("pointermove",event=>{if(dragging)handleDrag(event)});
-      canvas.addEventListener("pointerup",()=>{dragging=false});canvas.addEventListener("pointercancel",()=>{dragging=false});
-      function handleDrag(event){
-        if(!geometry)return;const p=pointerPosition(event);
+      canvas.addEventListener("pointerdown",event=>{
+        if(event.button!==0||dragging||!geometry)return;
+        const p=pointerPosition(event),key=state.mode==="lens"?"objectDistance":state.mode==="reflection"?"reflectionAngle":"refractionAngle";
         if(state.mode==="lens"){
-          state.objectDistance=Math.round(Math.max(7,Math.min(50,(geometry.lensX-p.x)/geometry.scale)));render();return;
+          if(Math.abs(p.x-geometry.objectX)>24||p.y<geometry.topY-24||p.y>geometry.axis+24)return;
+        }else{
+          const a=state[key]*Math.PI/180,sx=geometry.cx-Math.sin(a)*geometry.len,sy=geometry.cy-Math.cos(a)*geometry.len;
+          if(Math.hypot(p.x-sx,p.y-sy)>28)return;
         }
-        const dx=Math.max(0,geometry.cx-p.x),dy=Math.max(1,geometry.cy-p.y),angle=Math.round(Math.atan2(dx,dy)*180/Math.PI),clamped=Math.max(0,Math.min(state.mode==="reflection"?80:85,angle));
-        if(state.mode==="reflection")state.reflectionAngle=clamped;else state.refractionAngle=clamped;render();
+        dragging={pointer:event.pointerId,key,before:state[key],start:p,geometry:{...geometry}};
+        canvas.setPointerCapture(event.pointerId);event.preventDefault();
+      });
+      canvas.addEventListener("pointermove",event=>{
+        if(!dragging||dragging.pointer!==event.pointerId)return;
+        const p=pointerPosition(event),d=dragging;
+        if(state.mode==="lens")state.objectDistance=Math.round(Math.max(7,Math.min(50,d.before-(p.x-d.start.x)/d.geometry.scale)));
+        else{
+          const before=Math.atan2(d.geometry.cx-d.start.x,d.geometry.cy-d.start.y),after=Math.atan2(d.geometry.cx-p.x,d.geometry.cy-p.y);
+          state[d.key]=Math.round(Math.max(0,Math.min(state.mode==="reflection"?80:85,d.before+(after-before)*180/Math.PI)));
+        }
+        render();
+      });
+      function cancelPointer(){
+        if(!dragging)return;const old=dragging;dragging=null;state[old.key]=old.before;
+        if(canvas.hasPointerCapture(old.pointer))canvas.releasePointerCapture(old.pointer);render();
       }
+      canvas.addEventListener("pointerup",event=>{if(dragging?.pointer!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId)});
+      canvas.addEventListener("pointercancel",cancelPointer);canvas.addEventListener("lostpointercapture",cancelPointer);
+      window.addEventListener("keydown",event=>{if(event.key==="Escape")cancelPointer()});
+      document.addEventListener("visibilitychange",()=>{if(document.hidden)cancelPointer()});
+      window.addEventListener("message",event=>{if(event.source===window.parent&&event.origin===location.origin&&event.data?.type==="gewulab:active"&&event.data.active===false)cancelPointer()});
 
       window.addEventListener("resize",render);switchMode("reflection");
     })();
   </script>
   <script src="optics/physics.js?v=20260906-optics1"></script>
   <script src="optics/drawing.js?v=20260906-optics1"></script>
-  <script src="optics/bench.js?v=20260906-optics1"></script>
+  <script src="optics/bench.js?v=20261002"></script>
 </body>
 </html>

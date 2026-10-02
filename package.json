@@ -9,10 +9,11 @@
   "scripts": {
     "dev": "vinext dev --port 3001 --hostname 127.0.0.1",
     "build": "vinext build",
+    "build:static": "node scripts/build-static.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "typecheck": "tsc --noEmit --incremental false",
-    "test": "node --test --experimental-strip-types tests/inquiry-engine.test.mjs tests/inquiry-repository.test.mjs tests/sound-physics.test.mjs tests/inquiry-insights.test.mjs tests/classroom.test.mjs tests/circuit-physics.test.mjs tests/electricity-labs.test.mjs tests/mechanics.test.mjs tests/mechanics-workbench.test.mjs tests/optics.test.mjs",
-    "lint": "oxlint app tests scripts electricity mechanics optics public/classroom/classroom-bridge.js",
+    "test": "node --test --experimental-strip-types tests/*.test.mjs",
+    "lint": "oxlint app tests scripts electricity mechanics optics labs public/classroom/classroom-bridge.js",
     "verify": "npm run typecheck && npm test && npm run lint && npm run build",
     "format": "oxfmt"
   },

@@ -204,11 +204,21 @@ test('画布边缘的旋转手柄仍可操作，从实际按下位置转动不�
 });
 test('原反射折射透镜实验与三个新增实验可交替切换，不把未知模式送入旧渲染器', async () => {
   const source = await readFile(new URL('../光学仿真实验室.html', import.meta.url), 'utf8'), script = source.match(/<script>([\s\S]*?)<\/script>/)[1], nodes = new Map(), listeners = {}, modes = [];
-  const element = (dataset = {}) => ({ dataset, hidden: false, value: '', classList: { toggle() {} }, setAttribute() {}, addEventListener(k, fn) { this[k] = fn; }, getBoundingClientRect() { return { width: 900, height: 440 }; } });
+  const element = (dataset = {}) => ({ dataset, hidden: false, value: '', classList: { toggle() {} }, setAttribute() {}, addEventListener(k, fn) { this[k] = fn; }, getBoundingClientRect() { return { left: 0, top: 0, width: 900, height: 440 }; }, setPointerCapture(id) { this.pointer = id; }, hasPointerCapture(id) { return this.pointer === id; }, releasePointerCapture() { this.pointer = null; } });
   const tabs = ['bench', 'mirror-image', 'dispersion', 'reflection', 'refraction', 'lens'].map((mode) => element({ mode })), grid = element();
   const node = (id) => { if (!nodes.has(id)) nodes.set(id, element()); return nodes.get(id); };
   node('opticsCanvas').getContext = () => new Proxy({}, { get: (_t, k) => k === 'measureText' ? () => ({ width: 50 }) : () => {}, set: () => true });
-  const document = { getElementById: node, querySelector: () => grid, querySelectorAll: (selector) => selector === '.tab' ? tabs : selector === '.control-set' ? ['reflection', 'refraction', 'lens'].map((controls) => element({ controls })) : [] };
+  const document = { addEventListener() {}, getElementById: node, querySelector: () => grid, querySelectorAll: (selector) => selector === '.tab' ? tabs : selector === '.control-set' ? ['reflection', 'refraction', 'lens'].map((controls) => element({ controls })) : [] };
   runInNewContext(script, { document, window: { devicePixelRatio: 1, addEventListener: (k, fn) => { listeners[k] = fn; }, dispatchEvent: (e) => modes.push(e.detail) }, CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } } });
   for (const mode of ['bench', 'reflection', 'mirror-image', 'refraction', 'dispersion', 'lens', 'bench']) { tabs.find((t) => t.dataset.mode === mode).click(); const extended = ['bench', 'mirror-image', 'dispersion'].includes(mode); assert.equal(grid.hidden, extended); assert.equal(node('opticsBench').hidden, !extended); assert.equal(modes.at(-1), mode); assert.doesNotThrow(() => listeners.resize()); }
+  tabs.find((t) => t.dataset.mode === 'reflection').click();
+  const canvas = node('opticsCanvas'), before = node('reflectionAngleOut').textContent;
+  canvas.pointerdown({ button: 0, pointerId: 7, clientX: 850, clientY: 400 });
+  canvas.pointermove({ pointerId: 7, clientX: 20, clientY: 20 });
+  assert.equal(node('reflectionAngleOut').textContent, before, '点击空白区不应改变入射角');
+  const angle = 35 * Math.PI / 180, length = 440 * .52;
+  canvas.pointerdown({ button: 0, pointerId: 7, clientX: 900 * .56 - Math.sin(angle) * length, clientY: 440 * .64 - Math.cos(angle) * length, preventDefault() {} });
+  canvas.pointermove({ pointerId: 7, clientX: 250, clientY: 150 });
+  assert.notEqual(node('reflectionAngleOut').textContent, before);
+  canvas.pointercancel(); assert.equal(node('reflectionAngleOut').textContent, before, '取消拖动恢复原条件');
 });

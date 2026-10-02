@@ -107,7 +107,7 @@ export function ClassroomWorkspace({ active, moduleId }: { active: boolean; modu
       </nav>
       {!selected && <ClassroomCenter />}
       {selected && <div className="classroom-lab-heading"><div><h1>{selected.title}</h1><p>{selected.experiments.join(' · ')}</p></div><a className="iq-button iq-button-outline" href={classroomUrl(selected.id)} target="_blank" rel="noreferrer"><ExternalLink />单独窗口演示</a></div>}
-      {selected && <p className="classroom-record-note">课堂记录在本页切换板块时保留，刷新或关闭后清除；不会自动加入学生档案。离开声学会停止声音和采集，并取消尚未完成的录制。</p>}
+      {selected && <p className="classroom-record-note">电学自由搭建、光学自由探索的装置与记录自动保存在此浏览器，可导出完整备份；其余课堂记录在切换时保留，刷新前请导出。课堂记录不会自动加入学生档案。离开声学会停止声音和采集。</p>}
       {CLASSROOM_MODULES.filter((module) => visited.includes(module.id) || (active && moduleId === module.id)).map((module) => <ClassroomFrame key={module.id} id={module.id} active={active && moduleId === module.id} />)}
     </main>
   );

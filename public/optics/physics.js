@@ -139,6 +139,8 @@
     else if (kind === 'dispersion') { put('beam', 's1', 140, 250); put('prism', 'p1', 410, 305, { size: 170, angle: 20 }); put('screen', 'e1', 740, 430, { size: 300 }); }
     else if (kind === 'periscope') { put('beam', 's1', 125, 170, { white: false, count: 3, width: 22 }); put('mirror', 'm1', 390, 170, { angle: -45, size: 155 }); put('mirror', 'm2', 390, 420, { angle: -45, size: 155 }); put('screen', 'e1', 800, 420); }
     else if (kind === 'focus') { put('beam', 's1', 130, 300, { white: false, count: 7, width: 110 }); put('lens', 'l1', 440, 300, { size: 230, focal: 20 }); put('screen', 'e1', 640, 300, { size: 240 }); }
+    else if (kind === 'image') { put('object', 'o1', 160, 300); put('lens', 'l1', 460, 300, { size: 230, focal: 15 }); put('screen', 'e1', 760, 300, { size: 240 }); }
+    else if (kind === 'diverging') { put('beam', 's1', 140, 300, { white: false, count: 5, width: 80 }); put('diverging', 'd1', 440, 300, { size: 220 }); put('screen', 'e1', 740, 300, { size: 360 }); }
     else if (kind === 'filter') { put('beam', 's1', 130, 270); put('filter', 'c1', 290, 270); put('prism', 'p1', 480, 325, { size: 170, angle: 20 }); put('screen', 'e1', 790, 440, { size: 300 }); }
     else if (kind === 'glass') { put('beam', 's1', 160, 215, { white: false, angle: 18, count: 3, width: 25 }); put('glass', 'g1', 450, 315, { size: 270, angle: -15, dispersion: 0 }); put('screen', 'e1', 820, 410, { size: 290 }); }
     return s;

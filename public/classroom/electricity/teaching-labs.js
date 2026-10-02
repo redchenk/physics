@@ -249,14 +249,14 @@
     if (interaction.type === 'rheostat') { const s = state.ohm; s.rheostat = Math.round(Math.max(0, Math.min(120, (p.x - 315) / 170 * 120))); $('el-rheostat').value = s.rheostat; $('out-rheostat').textContent = `${s.rheostat} Ω`; render(); }
     if (interaction.type === 'magnet') { const s = state.induction, now = performance.now(), next = Math.max(-18, Math.min(18, (p.x - 480) * 6 / 100)); s.velocity = Math.max(-20, Math.min(20, (next - s.position) / Math.max(0.016, (now - interaction.last) / 1000))); s.position = next; interaction.last = now; $('el-position').value = next; $('out-position').textContent = `${fmt(next, 1)} cm`; updateInductionScene(measurement()); }
   });
-  function release(event) { if (!interaction || interaction.pointer !== event.pointerId) return; interaction = null; if (mode === 'induction') { state.induction.velocity = 0; render(); } }
-  root.addEventListener('pointerup', release); root.addEventListener('pointercancel', release);
+  function release(event) { if (!interaction || interaction.pointer !== event.pointerId) return; interaction = null; if (root.hasPointerCapture(event.pointerId)) root.releasePointerCapture(event.pointerId); if (mode === 'induction') { state.induction.velocity = 0; render(); } }
+  root.addEventListener('pointerup', release); root.addEventListener('pointercancel', release); root.addEventListener('lostpointercapture', release);
   root.addEventListener('keydown', (event) => {
     const button = event.target.closest('g[data-lab-action]'); if (button && ['Enter', ' '].includes(event.key)) { event.preventDefault(); action(button.dataset.labAction); }
     if (event.target.closest('[data-rheostat-drag]') && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); state.ohm.rheostat = Math.max(0, Math.min(120, state.ohm.rheostat + (event.key === 'ArrowLeft' ? -1 : 1))); mount(); root.querySelector('[data-rheostat-drag]')?.focus(); }
     if (event.target.closest('[data-magnet-drag]') && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); const s = state.induction; s.moving = 0; s.position = Math.max(-18, Math.min(18, s.position + (event.key === 'ArrowLeft' ? -0.5 : 0.5))); s.velocity = event.key === 'ArrowLeft' ? -5 : 5; interaction = { type: 'position', last: performance.now() }; $('el-position').value = s.position; $('out-position').textContent = `${fmt(s.position, 1)} cm`; updateInductionScene(measurement()); }
   });
-  function stopMotion() { state.induction.velocity = 0; state.induction.moving = 0; interaction = null; scan = null; }
+  function stopMotion() { const pointer = interaction?.pointer; state.induction.velocity = 0; state.induction.moving = 0; interaction = null; scan = null; if (pointer !== undefined && root.hasPointerCapture(pointer)) root.releasePointerCapture(pointer); }
   document.querySelectorAll('.tab[data-mode]').forEach((tab) => tab.addEventListener('click', () => { stopMotion(); mode = tab.dataset.mode; mount(); $('formula').textContent = { ohm: 'I = U / R', network: '观察分流与分压', iv: '逐点测出 I–U 曲线', induction: 'ε = −N · ΔΦ / Δt' }[mode]; }));
   $('builderTab').addEventListener('click', stopMotion);
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMotion(); });

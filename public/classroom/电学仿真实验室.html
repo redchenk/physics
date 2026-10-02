@@ -8,6 +8,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="electricity/lab.css">
   <link rel="stylesheet" href="electricity/circuit-builder.css">
+  <link rel="stylesheet" href="labs/workspace.css">
   <link rel="stylesheet" href="classroom.css">
   <script id="classroom-bridge" data-module="electricity" src="classroom-bridge.js" defer></script>
 </head>
@@ -24,8 +25,9 @@
     </nav>
     <section id="circuitBuilder" aria-label="自由电路实验台"></section>
     <section id="fixedElectricLab" class="teaching-lab" aria-label="电学专题实验" hidden></section>
-    <footer>先预测，再改变一个条件，最后比较测量结果。实验记录在刷新后清除，可导出保存。</footer>
+    <footer>先预测，再改变一个条件，最后比较测量结果。自由电路自动保存在此浏览器；专题记录刷新前请导出保存。</footer>
   </main>
+  <script src="labs/workspace.js"></script>
   <script src="electricity/circuit-physics.js"></script>
   <script src="electricity/lab-models.js"></script>
   <script src="electricity/lab-visuals.js"></script>

@@ -63,6 +63,8 @@ import {
 import {
   DEFAULT_WORKSPACE,
   LocalSessionRepository,
+  decodeWorkspaceBackup,
+  mergeWorkspaceBackup,
   type WorkspaceState,
 } from './inquiry-repository';
 import { LensVisual, OhmVisual, SoundVisual } from './experiment-visuals';
@@ -1039,6 +1041,8 @@ function TeacherWorkspace({
   onOpenStudentSession: (sessionId: string) => void;
 }) {
   const [dataScope, setDataScope] = useState<'local' | 'demo' | 'all'>('local');
+  const importInput = useRef<HTMLInputElement>(null);
+  const [pendingImport, setPendingImport] = useState<WorkspaceState | null>(null);
   const [experimentScope, setExperimentScope] = useState<ExperimentId | 'all'>('all');
   const scopedSessions = useMemo(() => state.sessions.filter((session) => (
     (dataScope === 'all' || session.dataOrigin === dataScope)
@@ -1060,13 +1064,15 @@ function TeacherWorkspace({
     .slice(0, 3);
   const updatePolicy = (patch: Partial<ClassPolicy>) => setState((current) => ({ ...current, policy: { ...current.policy, ...patch } }));
   const exportData = () => {
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), ...state }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), ...state }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = `physics-inquiry-evidence-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(anchor);
     anchor.click();
-    URL.revokeObjectURL(url);
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     setNotice('证据数据已导出为 JSON，原始事件与教师复核均已保留。');
   };
   const override = (diagnosisCode: string, verdict: 'confirm' | 'reject' | 'insufficient') => {
@@ -1106,8 +1112,34 @@ function TeacherWorkspace({
             setNotice('已载入明确标记的演示班级数据。');
           }}><Users />载入演示班级</button>
           <button className="iq-button iq-button-primary" type="button" onClick={exportData}><Download />导出证据</button>
+          <button className="iq-button iq-button-outline" type="button" onClick={() => importInput.current?.click()}>导入证据备份</button>
+          <input ref={importInput} type="file" accept=".json,application/json" hidden aria-label="导入探究证据备份" onChange={async (event) => {
+            const input = event.currentTarget;
+            const file = input.files?.[0];
+            if (!file) return;
+            try {
+              if (file.size > 10_000_000) throw new Error('备份最多 10 MB');
+              const backup = decodeWorkspaceBackup(await file.text());
+              if (!backup) throw new Error('备份版本、会话或证据格式无效');
+              setPendingImport(backup);
+            } catch (error) { setNotice(`导入失败：${error instanceof Error ? error.message : '无法读取文件'}。现有记录保留。`); }
+            finally { input.value = ''; }
+          }} />
         </div>
       </section>
+
+      {pendingImport && <section className="iq-policy-card" aria-label="确认导入证据备份">
+        <h2>检查备份后合并</h2>
+        <p>备份含 {pendingImport.sessions.length} 个会话，将新增 {pendingImport.sessions.filter((session) => !state.sessions.some((existing) => existing.id === session.id)).length} 个。同一 ID 的本机记录和当前教学策略会保留。</p>
+        <div className="iq-teacher-actions">
+          <button type="button" className="iq-button iq-button-primary" onClick={() => {
+            setState((current) => mergeWorkspaceBackup(current, pendingImport));
+            setPendingImport(null); setDataScope('all'); setExperimentScope('all');
+            setNotice('证据备份已合并，同一 ID 的本机记录未被覆盖。');
+          }}>合并会话记录</button>
+          <button type="button" className="iq-button iq-button-outline" onClick={() => setPendingImport(null)}>取消导入</button>
+        </div>
+      </section>}
 
       <section className="iq-policy-card">
         <div className="iq-section-head"><div><small>INTERVENTION POLICY</small><h2>诊断与干预策略</h2></div><span>对新会话及后续分析生效</span></div>
@@ -1449,7 +1481,7 @@ export function InquiryPlatform() {
           <CircleAlert />
           <span>
             <strong>本机保存失败，当前改动尚未持久化</strong>
-            <small>数据目前只在此页面内存中；刷新或关闭页面会丢失。请保持页面打开，必要时前往 Teacher OS 导出证据。</small>
+            <small>当前修改未能保存，可能是存储不可写或另一页面已更新记录。请先前往教师工作台导出证据备份，再刷新；也可从教师工作台导入备份。</small>
           </span>
         </div>
       )}

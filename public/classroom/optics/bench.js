@@ -5,16 +5,32 @@
   const states = { bench: { scene: O.example('periscope'), records: [], undo: [], redo: [] }, 'mirror-image': { scene: O.example('mirror'), records: [], undo: [], redo: [] }, dispersion: { scene: O.example('dispersion'), records: [], undo: [], redo: [] } };
   let mode = 'bench', selected = null, result, serial = 100, drag = null, pendingFrame = 0, inputBefore = null, suppressClick = false, virtual = true, normals = false;
   const current = () => states[mode], scene = () => current().scene, setScene = (s) => { current().scene = s; }, part = () => scene().parts.find((c) => c.id === selected);
-  const presets = [['empty', '空白实验台'], ['periscope', '双镜潜望镜'], ['focus', '透镜与光屏'], ['dispersion', '白光过棱镜'], ['filter', '滤光片＋棱镜'], ['glass', '玻璃砖偏移']];
+  const presets = [['empty', '空白实验台'], ['periscope', '双镜潜望镜'], ['focus', '透镜与光屏'], ['image', '凸透镜成像'], ['diverging', '凹透镜发散'], ['dispersion', '白光过棱镜'], ['filter', '滤光片＋棱镜'], ['glass', '玻璃砖偏移']];
   root.innerHTML = `<div class="ob-heading"><div><h2 id="obTitle">光学自由探索</h2><p id="obDescription"></p></div><button type="button" id="obTransfer" class="ob-button">带到自由探索</button></div>
     <div class="ob-presets" id="obPresets" aria-label="可拆改的起始装置">${presets.map(([id, label]) => `<button type="button" data-optics-preset="${id}">${label}</button>`).join('')}</div>
-    <div class="ob-layout"><aside class="ob-sidebar"><h3>器材盒 <small>可重复添加、自由组合</small></h3><div class="ob-palette">${Object.entries(O.TYPES).map(([id, info]) => `<button type="button" data-optics-add="${id}" aria-label="添加${info.name}"><b>${info.symbol}</b>${info.name}<span>＋</span></button>`).join('')}</div><section id="obInspector" class="ob-inspector" aria-label="所选器材属性"></section></aside>
+    <div class="ob-layout"><aside class="ob-sidebar"><details class="lab-palette-panel" id="obPalette" open><summary class="lab-palette-summary">添加光学器材</summary><h3>器材盒 <small>可重复添加、自由组合</small></h3><div class="ob-palette">${Object.entries(O.TYPES).map(([id, info]) => `<button type="button" data-optics-add="${id}" aria-label="添加${info.name}"><b>${info.symbol}</b>${info.name}<span>＋</span></button>`).join('')}</div></details></aside><section id="obInspector" class="ob-inspector ob-sidebar" aria-label="所选器材属性"></section>
     <div class="ob-workspace"><div class="ob-toolbar"><button type="button" id="obUndo" class="ob-button">撤销</button><button type="button" id="obRedo" class="ob-button">重做</button><button type="button" id="obVirtual" class="ob-button" aria-pressed="true">虚像与延长线</button><button type="button" id="obNormals" class="ob-button" aria-pressed="false">界面法线</button><span></span><button type="button" id="obSave" class="ob-button">保存装置</button><button type="button" id="obImport" class="ob-button">载入装置</button><input type="file" accept=".json,application/json" id="obFile" hidden aria-label="载入光学装置"><button type="button" id="obReset" class="ob-button">恢复起点</button></div>
-    <p id="obNotice" class="ob-notice" role="status">拖动器材移动，选中后拖圆形手柄旋转。光线会按实际位置重新计算。</p><div class="ob-scroll" tabindex="0" aria-label="可左右滚动的光学实验台"><svg id="obBoard" class="ob-board" viewBox="0 0 1000 600" aria-label="可拖放组合的光路图"></svg></div><p class="ob-legend"><span>实线：实际光路</span><span>虚线：反向延长线，不是真实光线</span><span>光屏亮点：实际到达的光</span></p><div id="obStatus" class="ob-status" aria-live="polite"></div><div id="obMetrics" class="ob-metrics"></div><section class="ob-screen-readout"><div class="ob-readout-heading"><h3>光屏读数</h3><select id="obScreen" aria-label="选择观察光屏"></select></div><div id="obScreenData"></div></section></div></div>
+    <div class="lab-view-tools" id="obViewTools"><button type="button" class="ob-button" data-lab-zoom="fit" aria-pressed="true">适应窗口</button><button type="button" class="ob-button" data-lab-zoom="out" aria-label="缩小光路图">−</button><output id="obZoom">100%</output><button type="button" class="ob-button" data-lab-zoom="in" aria-label="放大光路图">＋</button><button type="button" class="ob-button" data-lab-zoom="actual">原始大小</button><select id="obObjects" aria-label="选择光学器材"></select><button type="button" class="ob-button" id="obProperties">查看属性</button><span class="lab-save-status" id="obSaveStatus" role="status">自动保存准备中</span></div><p id="obNotice" class="ob-notice" role="status">拖动器材移动，选中后拖圆形手柄旋转。光线会按实际位置重新计算。</p><div class="ob-scroll" id="obScroll" tabindex="0" aria-label="可缩放和左右滚动的光学实验台"><div class="lab-stage" id="obStage"><svg id="obBoard" class="ob-board" viewBox="0 0 1000 600" aria-label="可拖放组合的光路图"></svg></div></div><p class="ob-legend"><span>实线：实际光路</span><span>虚线：反向延长线，不是真实光线</span><span>光屏亮点：实际到达的光</span></p><div id="obStatus" class="ob-status" aria-live="polite"></div><div id="obMetrics" class="ob-metrics"></div><section class="ob-screen-readout"><div class="ob-readout-heading"><h3>光屏读数</h3><select id="obScreen" aria-label="选择观察光屏"></select></div><div id="obScreenData"></div></section></div></div>
     <div class="ob-questions"><div><h3>先预测，再操作</h3><p id="obQuestion"></p></div><div><h3>改变一个条件</h3><p id="obMethod"></p></div></div>
-    <section class="ob-records"><div class="ob-record-heading"><h3>探索记录 <small id="obRecordCount">0 组</small></h3><button type="button" id="obRecord" class="ob-button primary">记录当前结果</button><button type="button" id="obCsv" class="ob-button">导出 CSV</button></div><div class="ob-table-scroll"><table><thead><tr><th>组次</th><th>器材与变量</th><th>测量结果</th><th>模型提示</th></tr></thead><tbody id="obRows"></tbody></table></div></section>
-    <details class="ob-model"><summary>操作说明与模型范围</summary><p>直接拖动器材；点击后拖圆形手柄旋转，也可用属性数值精调。方向键移动，Q / E 转动，Delete 删除，Esc 取消拖动。所有起始装置可拆改；保存装置导出 JSON，探索记录可导出 CSV。</p><p>镜面采用理想双面反射，棱镜与玻璃砖在每个表面按折射定律追迹并处理全反射。白光以七个代表波长取样；色散用可调的正常色散教学模型 n(λ)=n₅₅₀+B(1/λ²−1/0.55²)，λ 以 μm 计，不对应指定牌号玻璃。颜色位置由光路计算，颜色显示不是光谱仪测量的强度。</p><p>透镜采用薄透镜近轴近似，不计算色差或像差。仅显示物体顶端的代表光线，平面镜虚像轮廓显示第一次直接反射的对称像；不将多镜反射的所有高阶虚像都画出。光屏只截获实际光线，虚像不能投到光屏上；零散亮点不等于完整清晰像。忽略衍射、干涉、偏振、界面部分反射及真实吸收，每条光线最多追踪 32 次相互作用。透明器材不宜重叠。</p><p>实验依据：<a href="https://openstax.org/books/university-physics-volume-3/pages/2-1-images-formed-by-plane-mirrors" target="_blank" rel="noreferrer">平面镜成像</a>、<a href="https://openstax.org/books/university-physics-volume-3/pages/1-5-dispersion" target="_blank" rel="noreferrer">色散</a>、<a href="https://openstax.org/books/university-physics-volume-3/pages/2-4-thin-lenses" target="_blank" rel="noreferrer">薄透镜</a>（OpenStax）。装置和记录在切换实验时保留；刷新前请导出保存。</p></details>`;
+    <section class="ob-records"><div class="ob-record-heading"><h3>探索记录 <small id="obRecordCount">0 组</small></h3><button type="button" id="obRecord" class="ob-button primary">记录当前结果</button><button type="button" id="obBackup" class="ob-button">保存装置与记录</button><button type="button" id="obCsv" class="ob-button">导出 CSV</button></div><div class="ob-table-scroll"><table><thead><tr><th>组次</th><th>器材与变量</th><th>测量结果</th><th>模型提示</th></tr></thead><tbody id="obRows"></tbody></table></div></section>
+    <details class="ob-model"><summary>操作说明与模型范围</summary><p>直接拖动器材；点击后拖圆形手柄旋转，也可用属性数值精调。方向键移动，Q / E 转动，Delete 删除，Esc 取消拖动。所有起始装置可拆改；保存装置导出 JSON，探索记录可导出 CSV。</p><p>镜面采用理想双面反射，棱镜与玻璃砖在每个表面按折射定律追迹并处理全反射。白光以七个代表波长取样；色散用可调的正常色散教学模型 n(λ)=n₅₅₀+B(1/λ²−1/0.55²)，λ 以 μm 计，不对应指定牌号玻璃。颜色位置由光路计算，颜色显示不是光谱仪测量的强度。</p><p>透镜采用薄透镜近轴近似，不计算色差或像差。仅显示物体顶端的代表光线，平面镜虚像轮廓显示第一次直接反射的对称像；不将多镜反射的所有高阶虚像都画出。光屏只截获实际光线，虚像不能投到光屏上；零散亮点不等于完整清晰像。忽略衍射、干涉、偏振、界面部分反射及真实吸收，每条光线最多追踪 32 次相互作用。透明器材不宜重叠。</p><p>实验依据：<a href="https://openstax.org/books/university-physics-volume-3/pages/2-1-images-formed-by-plane-mirrors" target="_blank" rel="noreferrer">平面镜成像</a>、<a href="https://openstax.org/books/university-physics-volume-3/pages/1-5-dispersion" target="_blank" rel="noreferrer">色散</a>、<a href="https://openstax.org/books/university-physics-volume-3/pages/2-4-thin-lenses" target="_blank" rel="noreferrer">薄透镜</a>（OpenStax）。三个自由探索专题的装置与记录自动保存在此浏览器；“保存装置与记录”导出完整备份，“载入装置”可恢复备份或单个装置。</p></details>`;
   const board = $('obBoard');
+  function validateWorkspace(raw) {
+    if (!raw || raw.version !== 1 || !raw.states) throw new Error('光学备份格式不正确');
+    const clean = { version: 1, states: {} };
+    for (const key of ['bench', 'mirror-image', 'dispersion']) {
+      const item = raw.states[key];
+      if (!item || !Array.isArray(item.records) || item.records.length > 200) throw new Error('专题记录格式不正确');
+      clean.states[key] = { scene: O.validate(item.scene), records: item.records.map((r) => {
+        if (!r || ['time', 'conditions', 'measurements', 'notes'].some((k) => typeof r[k] !== 'string' || r[k].length > 100000)) throw new Error('实验记录不正确');
+        return { scene: O.validate(r.scene), ...Object.fromEntries(['time', 'conditions', 'measurements', 'notes'].map((k) => [k, r[k]])) };
+      }) };
+    }
+    return clean;
+  }
+  const store = globalThis.LabWorkspace?.createStore('gewuphysics.classroom.optics.v1', validateWorkspace, (message) => { $('obSaveStatus').textContent = message; });
+  const workspace = () => ({ version: 1, states: Object.fromEntries(Object.entries(states).map(([key, value]) => [key, { scene: value.scene, records: value.records }])) });
+  function persist() { store?.save(workspace()); }
   function announce(message) { $('obNotice').textContent = message; }
   function remember(before = scene()) { current().undo.push(O.clone(before)); if (current().undo.length > 60) current().undo.shift(); current().redo.length = 0; }
   function cancelDrag() { if (pendingFrame) cancelAnimationFrame(pendingFrame); pendingFrame = 0; if (drag) { const old = drag; drag = null; setScene(old.before); if (board.hasPointerCapture(old.pointer)) board.releasePointerCapture(old.pointer); } if (inputBefore) { remember(inputBefore); inputBefore = null; } }
@@ -33,7 +49,7 @@
     if (c.type === 'glass') html += field('depth', '玻璃砖厚度 / cm', 2.5, 22, .5, c.depth / O.SCALE);
     if (c.type === 'aperture') html += field('gap', '狭缝宽度 / cm', .4, 16, .2, c.gap / O.SCALE);
     if (c.type === 'filter') html += `<label>透过颜色<select data-optics-property="pass" aria-label="滤光片透过颜色">${[['red', '红光区域'], ['green', '绿光区域'], ['blue', '蓝光区域'], ['all', '全部透过']].map(([value, name]) => `<option value="${value}" ${c.pass === value ? 'selected' : ''}>${name}</option>`).join('')}</select></label><small>理想波段滤光片，不改变透过光的传播方向。</small>`;
-    $('obInspector').innerHTML = html + '<div class="ob-inspector-actions"><button type="button" data-optics-action="duplicate">复制器材</button><button type="button" data-optics-action="delete" class="danger">删除器材</button></div>';
+    $('obInspector').innerHTML = html + '<div class="ob-inspector-actions"><button type="button" data-optics-action="align">对齐高度与方向</button><button type="button" data-optics-action="duplicate">复制器材</button><button type="button" data-optics-action="delete" class="danger">删除器材</button></div>';
   }
   function screenReadout() {
     const screens = scene().parts.filter((c) => c.type === 'screen'), previous = $('obScreen').value;
@@ -58,13 +74,14 @@
     $('obRows').innerHTML = rows.length ? rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.conditions)}</td><td>${esc(r.measurements)}</td><td>${esc(r.notes)}</td></tr>`).join('') : '<tr><td colspan="4">改动前后分别记录，比较像距、光线方向或光屏上的分色位置。</td></tr>';
   }
   function render(full = true) {
-    result = O.trace(scene()); const focusAttr = ['data-optic', 'data-rotate'].find((k) => document.activeElement?.getAttribute(k)), focusId = focusAttr && document.activeElement.getAttribute(focusAttr);
+    result = O.trace(scene()); const propertyKey = document.activeElement?.dataset.opticsProperty; const focusAttr = ['data-optic', 'data-rotate'].find((k) => document.activeElement?.getAttribute(k)), focusId = focusAttr && document.activeElement.getAttribute(focusAttr);
     board.innerHTML = D.board(scene(), result, selected, { virtual, normals }); if (focusId && !drag) board.querySelector(`[${focusAttr}="${focusId}"]`)?.focus({ preventScroll: true });
     screenReadout(); $('obMetrics').innerHTML = measurements().map(([name, value, unit]) => `<div><span>${name}</span><strong>${fmt(value, unit)}</strong></div>`).join('');
     const special = mode === 'mirror-image' ? result.virtuals.length ? '虚像与物体关于镜面对称，镜后的虚线只是定位辅助；移动物体或镜面继续比较。' : '添加发光物体与平面镜，或调整位置使光线到达镜面。' : mode === 'dispersion' ? '改变棱镜、入射方向或光屏位置，观察各色光的偏折；紫光通常比红光偏折更多。' : '实线按当前器材位置逐次反射或折射。器材不用“连线”，放进光路就会参与实验。';
     $('obStatus').textContent = result.issues.length ? result.issues.join('；') : special; $('obStatus').classList.toggle('warning', !!result.issues.length);
     $('obUndo').disabled = !current().undo.length; $('obRedo').disabled = !current().redo.length; $('obRecord').disabled = !scene().parts.length || !!drag;
-    if (full) { inspector(); records(); }
+    $('obObjects').innerHTML = '<option value="">选择器材…</option>' + scene().parts.map((c) => `<option value="${c.id}" ${c.id === selected ? 'selected' : ''}>${esc(c.label)} ${O.TYPES[c.type].name}</option>`).join('');
+    if (full) { inspector(); records(); if (propertyKey) $('obInspector').querySelector(`[data-optics-property="${propertyKey}"]`)?.focus({ preventScroll: true }); if (!drag && !inputBefore) persist(); }
   }
   function selectMode(next) {
     if (!Object.hasOwn(states, next)) return; cancelDrag(); mode = next; selected = null;
@@ -89,6 +106,7 @@
     if (create) { cancelDrag(); add(create.dataset.opticsAdd); return; }
     if (item) { selected = item.dataset.optic; render(); return; }
     const action = e.target.closest('[data-optics-action]')?.dataset.opticsAction;
+    if (action === 'align' && part()) { const c = part(), reference = scene().parts.find((p) => p.id !== c.id && ['beam', 'object', 'lens', 'diverging'].includes(p.type)); remember(); c.y = reference?.y ?? 300; c.angle = reference?.angle ?? 0; render(); announce('已对齐参考器材的方向和高度；可继续精调或撤销。'); }
     if (action === 'delete') remove(); if (action === 'duplicate' && part()) add(part().type, part()); if (action === 'turn-left') turn(-15); if (action === 'turn-right') turn(15);
   });
   function property(e, complete) {
@@ -100,7 +118,8 @@
     if (!inputBefore) inputBefore = O.clone(scene()); setScene(next); if (complete) { remember(inputBefore); inputBefore = null; } render(complete);
     if (key === 'wavelength' && $('obWavelength')) $('obWavelength').textContent = `${value} nm`;
   }
-  root.addEventListener('input', (e) => { if (e.target.type === 'range') property(e, false); }); root.addEventListener('change', (e) => property(e, true));
+  root.addEventListener('input', (e) => { if (['range', 'number'].includes(e.target.type)) property(e, false); }); root.addEventListener('change', (e) => property(e, true));
+  root.addEventListener('focusout', (e) => { if (inputBefore && e.target.dataset.opticsProperty) property(e, true); });
   const pointAt = (e) => { const r = board.getBoundingClientRect(); return { x: (e.clientX - r.left) * O.WIDTH / r.width, y: (e.clientY - r.top) * O.HEIGHT / r.height }; };
   board.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || drag) return; const handle = e.target.closest('[data-rotate]'), item = e.target.closest('[data-optic]'); if (!handle && !item) return;
@@ -109,7 +128,7 @@
   });
   board.addEventListener('pointermove', (e) => {
     if (!drag || drag.pointer !== e.pointerId) return; const at = pointAt(e), dx = at.x - drag.start.x, dy = at.y - drag.start.y; if (!drag.moved && Math.hypot(dx, dy) < 3) return;
-    drag.moved = true; const c = part(); if (drag.rotate) { const delta = (Math.atan2(at.y - c.y, at.x - c.x) - Math.atan2(drag.start.y - c.y, drag.start.x - c.x)) * 180 / Math.PI; c.angle = ((Math.round(drag.angle + delta) + 540) % 360) - 180; } else { c.x = Math.max(25, Math.min(975, Math.round((drag.x + dx) / 5) * 5)); c.y = Math.max(25, Math.min(575, Math.round((drag.y + dy) / 5) * 5)); }
+    drag.moved = true; const c = part(); if (drag.rotate) { const delta = (Math.atan2(at.y - c.y, at.x - c.x) - Math.atan2(drag.start.y - c.y, drag.start.x - c.x)) * 180 / Math.PI; c.angle = ((Math.round(drag.angle + delta) + 540) % 360) - 180; } else { c.x = Math.max(25, Math.min(975, Math.round((drag.x + dx) / (e.shiftKey ? 1 : 5)) * (e.shiftKey ? 1 : 5))); c.y = Math.max(25, Math.min(575, Math.round((drag.y + dy) / (e.shiftKey ? 1 : 5)) * (e.shiftKey ? 1 : 5))); }
     if (!pendingFrame) pendingFrame = requestAnimationFrame(() => { pendingFrame = 0; render(false); });
   });
   function finishDrag(e) {
@@ -120,6 +139,7 @@
   board.addEventListener('pointerup', finishDrag); board.addEventListener('pointercancel', finishDrag); board.addEventListener('lostpointercapture', finishDrag);
   root.addEventListener('keydown', (e) => {
     if (e.target.matches('input,select,textarea')) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); $(e.shiftKey ? 'obRedo' : 'obUndo').click(); return; }
     if (e.key === 'Escape') { cancelDrag(); render(); announce('已取消拖动，器材恢复原位。'); return; }
     const target = e.target.closest('[data-optic],[data-rotate]'); if (target) selected = target.dataset.optic || target.dataset.rotate;
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remove(); return; }
@@ -128,27 +148,43 @@
     if (e.key.startsWith('Arrow') && target) { e.preventDefault(); remember(); const c = part(); c.x = Math.max(25, Math.min(975, c.x + (e.key === 'ArrowLeft' ? -5 : e.key === 'ArrowRight' ? 5 : 0))); c.y = Math.max(25, Math.min(575, c.y + (e.key === 'ArrowUp' ? -5 : e.key === 'ArrowDown' ? 5 : 0))); render(); }
     if (['Enter', ' '].includes(e.key) && target) { e.preventDefault(); render(); }
   });
-  $('obUndo').addEventListener('click', () => { cancelDrag(); if (!current().undo.length) return; current().redo.push(O.clone(scene())); setScene(current().undo.pop()); selected = null; render(); });
-  $('obRedo').addEventListener('click', () => { cancelDrag(); if (!current().redo.length) return; current().undo.push(O.clone(scene())); setScene(current().redo.pop()); selected = null; render(); });
+  for (const [id, fromKey, toKey] of [['obUndo', 'undo', 'redo'], ['obRedo', 'redo', 'undo']]) $(id).addEventListener('click', () => {
+    cancelDrag(); const state = current(); if (!state[fromKey].length) return; const previous = state[fromKey].pop();
+    state[toKey].push(previous.scene ? { scene: O.clone(scene()), records: O.clone(state.records) } : O.clone(scene()));
+    setScene(previous.scene || previous); if (previous.scene) state.records = previous.records; selected = null; render();
+  });
   $('obVirtual').addEventListener('click', () => { virtual = !virtual; $('obVirtual').setAttribute('aria-pressed', String(virtual)); render(false); }); $('obNormals').addEventListener('click', () => { normals = !normals; $('obNormals').setAttribute('aria-pressed', String(normals)); render(false); });
   $('obScreen').addEventListener('change', () => render(false)); $('obReset').addEventListener('click', () => loadPreset(mode === 'mirror-image' ? 'mirror' : mode === 'dispersion' ? 'dispersion' : 'periscope'));
   $('obTransfer').addEventListener('click', () => { const copy = O.clone(scene()); states.bench.undo.push(O.clone(states.bench.scene)); states.bench.redo = []; states.bench.scene = copy; document.querySelector('[data-mode="bench"]').click(); announce('装置已带到自由探索；原专题的装置与记录保留。继续加器材组合实验。'); });
-  function download(name, content, type) { const url = URL.createObjectURL(new Blob([content], { type })), a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+  function download(name, content, type) { if (globalThis.LabWorkspace) { globalThis.LabWorkspace.download(name, content, type); return; } const url = URL.createObjectURL(new Blob([content], { type })), a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
   $('obSave').addEventListener('click', () => download('光学探索装置.json', JSON.stringify(scene(), null, 2), 'application/json')); $('obImport').addEventListener('click', () => $('obFile').click());
   $('obFile').addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
-    try { if (file.size > 200000) throw new Error('文件过大'); const next = O.validate(JSON.parse(await file.text())); cancelDrag(); remember(); setScene(next); selected = null; render(); announce('已载入光学装置，可继续搭建。'); }
+    try {
+      if (file.size > 5000000) throw new Error('文件过大，最多 5 MB'); const raw = JSON.parse(await file.text());
+      if (raw.states) {
+        const next = validateWorkspace(raw); cancelDrag();
+        for (const key of Object.keys(states)) { states[key].undo.push({ scene: O.clone(states[key].scene), records: O.clone(states[key].records) }); states[key].redo = []; states[key].scene = next.states[key].scene; states[key].records = next.states[key].records; }
+      } else { const next = O.validate(raw); cancelDrag(); remember(); setScene(next); }
+      selected = null; render(); announce('已载入装置或完整备份；本专题导入前的装置和记录可撤销恢复。');
+    }
     catch (error) { announce(`载入失败：${error.message}。原装置保留。`); } finally { e.target.value = ''; }
   });
   $('obRecord').addEventListener('click', () => {
     if (!scene().parts.length || drag) return; if (current().records.length >= 200) { announce('已记录 200 组，请先导出保存。'); return; }
     const conditions = scene().parts.map((c) => `${c.label} ${O.TYPES[c.type].name} (${fmt(c.x / 10)},${fmt(c.y / 10)}) cm ${c.angle}°${['lens', 'diverging'].includes(c.type) ? ` f=${c.focal} cm` : ''}${['prism', 'glass'].includes(c.type) ? ` n550=${c.index} B=${c.dispersion} 顶角=${c.apex}°` : ''}${['beam', 'object'].includes(c.type) ? ` ${c.on ? c.white ? '白光' : `${c.wavelength} nm` : '关闭'}` : ''}`).join('；');
     const screen = result.hits.map((h) => `${scene().parts.find((c) => c.id === h.componentId).label} ${h.wavelength} nm: ${fmt(h.offset, 'cm')}`).join('；');
-    current().records.push({ time: new Date().toISOString(), scene: O.clone(scene()), conditions, measurements: measurements().map(([name, value, unit]) => `${name} ${fmt(value, unit)}`).join('；') + (screen ? `；${screen}` : ''), notes: result.issues.join('；') || '理想几何光学；光屏只记录实际到达的光' }); records(); announce(`已记录 ${current().records.length} 组。之后的修改不会改变这组快照。`);
+    current().records.push({ time: new Date().toISOString(), scene: O.clone(scene()), conditions, measurements: measurements().map(([name, value, unit]) => `${name} ${fmt(value, unit)}`).join('；') + (screen ? `；${screen}` : ''), notes: result.issues.join('；') || '理想几何光学；光屏只记录实际到达的光' }); records(); persist(); announce(`已记录 ${current().records.length} 组。之后的修改不会改变这组快照。`);
   });
   $('obCsv').addEventListener('click', () => { const cell = (s) => `"${String(s).replace(/"/g, '""')}"`, rows = [['组次', '时间', '器材与变量', '测量结果', '模型提示', '装置快照'], ...current().records.map((r, i) => [i + 1, r.time, r.conditions, r.measurements, r.notes, JSON.stringify(r.scene)])]; download('光学探索记录.csv', '\ufeff' + rows.map((r) => r.map(cell).join(',')).join('\r\n'), 'text/csv;charset=utf-8'); });
-  window.addEventListener('optics:mode', (e) => { if (Object.hasOwn(states, e.detail)) selectMode(e.detail); else cancelDrag(); });
+  window.addEventListener('optics:mode', (e) => { if (Object.hasOwn(states, e.detail)) { selectMode(e.detail); viewport?.refresh(); } else cancelDrag(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelDrag(); render(); } });
   window.addEventListener('message', (e) => { if (e.source === window.parent && e.origin === location.origin && e.data?.type === 'gewulab:active' && e.data.active === false) { cancelDrag(); render(); } });
+  $('obObjects').addEventListener('change', (event) => { cancelDrag(); selected = event.target.value || null; render(); });
+  $('obProperties').addEventListener('click', () => { $('obInspector').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); $('obInspector').querySelector('input,select,button')?.focus({ preventScroll: true }); });
+  $('obBackup').addEventListener('click', () => download('光学实验完整备份.json', JSON.stringify(workspace(), null, 2), 'application/json'));
+  const restored = store?.load(); if (restored) for (const key of Object.keys(states)) { states[key].scene = restored.states[key].scene; states[key].records = restored.states[key].records; }
+  const viewport = globalThis.LabWorkspace?.viewport({ board, stage: $('obStage'), scroll: $('obScroll'), width: O.WIDTH, height: O.HEIGHT, controls: $('obViewTools'), output: $('obZoom') });
+  if (window.matchMedia?.('(max-width:760px)').matches) $('obPalette').open = false;
   selectMode('bench'); document.querySelector('[data-mode="bench"]').click();
 })();

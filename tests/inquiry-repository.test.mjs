@@ -10,6 +10,8 @@ const {
   DEFAULT_WORKSPACE,
   LocalSessionRepository,
   MemorySessionRepository,
+  decodeWorkspaceBackup,
+  mergeWorkspaceBackup,
 } = await import(new URL('../app/inquiry-repository.ts', import.meta.url));
 
 class FakeStorage {
@@ -185,4 +187,37 @@ test('声学探究会话可以本地保存并完整恢复', () => {
     waveformCode: 0,
   });
   assert.equal(loaded.activeSessionId, session.id);
+});
+
+test('新旧 JSON 证据备份可校验恢复，重复会话与未来版本被拒绝', () => {
+  const session = createSession('备份学生', 'ohm', DEFAULT_WORKSPACE.policy, 500);
+  const state = { ...DEFAULT_WORKSPACE, sessions: [session], activeSessionId: session.id };
+  for (const version of [undefined, 1]) {
+    const raw = JSON.stringify({ ...state, exportedAt: '2026-10-02T00:00:00.000Z', version });
+    assert.deepEqual(decodeWorkspaceBackup(raw), state);
+  }
+  assert.equal(decodeWorkspaceBackup(JSON.stringify({ ...state, exportedAt: 'today', version: 99 })), null);
+  assert.equal(decodeWorkspaceBackup(JSON.stringify({ ...state, sessions: [session, session], exportedAt: 'today' })), null);
+  assert.equal(decodeWorkspaceBackup('broken'), null);
+});
+
+test('合并备份保留本机同 ID 会话、当前策略和打开的会话', () => {
+  const local = createSession('本机学生', 'ohm', DEFAULT_WORKSPACE.policy, 500);
+  const remote = createSession('备份学生', 'lens', DEFAULT_WORKSPACE.policy, 600);
+  const current = { ...DEFAULT_WORKSPACE, sessions: [local], activeSessionId: local.id };
+  const backup = { ...DEFAULT_WORKSPACE, sessions: [{ ...local, studentAlias: '旧称呼' }, remote], policy: { automationMode: 'guide', maxHintsPerSession: 2 } };
+  const merged = mergeWorkspaceBackup(current, backup);
+  assert.deepEqual(merged.sessions, [local, remote]);
+  assert.deepEqual(merged.policy, current.policy); assert.equal(merged.activeSessionId, local.id);
+  merged.sessions[0].studentAlias = '修改副本'; assert.equal(local.studentAlias, '本机学生');
+});
+
+test('旧探究页面保存时不会覆盖另一个页面新增的学生记录', () => {
+  const storage = new FakeStorage(), key = 'concurrent';
+  const first = new LocalSessionRepository({ storage, key }), second = new LocalSessionRepository({ storage, key });
+  const state = { ...DEFAULT_WORKSPACE, sessions: [createSession('新记录', 'ohm', DEFAULT_WORKSPACE.policy, 700)] };
+  first.loadWithStatus(); second.loadWithStatus();
+  assert.equal(first.save(state), true); const raw = storage.getItem(key);
+  assert.equal(second.save(DEFAULT_WORKSPACE), false); assert.equal(storage.getItem(key), raw);
+  assert.equal(second.clear(), false); assert.equal(storage.getItem(key), raw);
 });

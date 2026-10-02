@@ -331,6 +331,7 @@ function parseWorkspace(raw: string | null): WorkspaceState | null {
     }
 
     const sessions = storedState.sessions.map(migrateSession);
+    if (new Set(sessions.map((session) => session.id)).size !== sessions.length) return null;
     const activeSessionId = sessions.some((session) => session.id === storedState.activeSessionId)
       ? storedState.activeSessionId
       : null;
@@ -340,9 +341,29 @@ function parseWorkspace(raw: string | null): WorkspaceState | null {
   }
 }
 
+export function decodeWorkspaceBackup(raw: string): WorkspaceState | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed)) return null;
+    if (parsed.version === STORAGE_VERSION && isRecord(parsed.state)) return parseWorkspace(raw);
+    if (parsed.version !== undefined && parsed.version !== STORAGE_VERSION) return null;
+    if (!isString(parsed.exportedAt)) return null;
+    return parseWorkspace(JSON.stringify({ version: STORAGE_VERSION, savedAt: Date.now(), state: parsed }));
+  } catch { return null; }
+}
+
+export function mergeWorkspaceBackup(current: WorkspaceState, incoming: WorkspaceState): WorkspaceState {
+  const known = new Set(current.sessions.map((session) => session.id));
+  return cloneWorkspace({
+    ...current,
+    sessions: [...current.sessions, ...incoming.sessions.filter((session) => !known.has(session.id))],
+  });
+}
+
 export class LocalSessionRepository implements SessionRepository {
   private readonly key: string;
   private readonly configuredStorage: StorageAdapter | null | undefined;
+  private previousRaw: string | null | undefined;
 
   constructor(options: LocalRepositoryOptions = {}) {
     this.key = options.key ?? DEFAULT_STORAGE_KEY;
@@ -362,6 +383,7 @@ export class LocalSessionRepository implements SessionRepository {
     }
     try {
       const raw = storage.getItem(this.key);
+      this.previousRaw = raw;
       if (raw === null) {
         return { state: defaultWorkspace(), status: 'empty', recoveryRaw: null };
       }
@@ -387,7 +409,10 @@ export class LocalSessionRepository implements SessionRepository {
       state: cloneWorkspace({ ...state, sessions, activeSessionId }),
     };
     try {
-      storage.setItem(this.key, JSON.stringify(envelope));
+      if (this.previousRaw !== undefined && storage.getItem(this.key) !== this.previousRaw) return false;
+      const raw = JSON.stringify(envelope);
+      storage.setItem(this.key, raw);
+      this.previousRaw = raw;
       return true;
     } catch {
       return false;
@@ -398,7 +423,9 @@ export class LocalSessionRepository implements SessionRepository {
     const storage = this.resolveStorage();
     if (!storage) return false;
     try {
+      if (this.previousRaw !== undefined && storage.getItem(this.key) !== this.previousRaw) return false;
       storage.removeItem(this.key);
+      this.previousRaw = null;
       return true;
     } catch {
       return false;
