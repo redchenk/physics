@@ -72,6 +72,7 @@ test('损坏或不支持的保存版本不会在启动时被空白实验覆盖',
 test('新增凸透镜成像装置的顶端光线在 2f 光屏相交，凹透镜使光束发散', () => {
   const O = globalThis.OpticsPhysics;
   const image = O.trace(O.example('image'));
+  assert.deepEqual(image.issues, []);
   assert.equal(image.hits.length, 5);
   assert.ok(image.hits.every((h) => Math.abs(h.point.y - 365) < 1e-5));
   const divergent = O.trace(O.example('diverging'));
